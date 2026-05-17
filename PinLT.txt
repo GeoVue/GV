@@ -1,0 +1,2798 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>GeoVue Virtual Log</title>
+		<link rel="icon" href="https://www.atsps2.net/LogoLargeTransparent48x48.ico" type="image/x-icon">
+		<link rel="shortcut icon" href="https://www.atsps2.net/LogoLargeTransparent48x48.ico" type="image/x-icon">
+		<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+		<script src="https://unpkg.com/leaflet-image/leaflet-image.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+		<style>
+			.header {
+				align-items: left;
+				padding: 10px 20px;
+			}
+			.header img {
+				width: 50px;
+				height: 50px;
+				margin-right: 10px;
+			}
+			.header h1 {
+				margin: 0;
+				color: #555;
+			}
+			.wait-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.5);
+				display: none;
+				justify-content: center;
+				align-items: center;
+			}
+			.wait-message {
+				color: white;
+				font-size: 24px;
+				 margin-bottom: 10px;
+			}
+			.spinner {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				border: 4px solid rgba(255, 255, 255, 0.3);
+				border-top-color: #fff;
+				animation: spin 1s linear infinite;
+			}
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+			.Introheading-container {
+				display: flex;
+				align-items: center;
+			}
+			.audio-button {
+				padding: 10px 110px;
+				font-size: 16px;
+				color: #fff;
+				background-color: #555;
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				transition: background-color 0.3s;
+				margin-left: 0px;
+				margin-bottom: 20px;
+			}
+			.audio-button:hover {
+				background-color: #0056b3;
+			}
+			.heading-container {
+				display: flex;
+				align-items: center;
+			 }
+			.play-symbol {
+				font-size: 16px;
+				margin-left: 5px;
+			}
+			.collapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.collapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.desccontent {
+				padding: 0 4px;
+				border: 1px solid #ccc;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1100px;
+				margin: 0 auto;
+				margin-left: 0;
+				border-radius: 10px;
+			}
+			.GIScollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.GIScollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.GISccontent {
+				padding: 0 18px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1100px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.GISiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.GISiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.CORRcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.CORRcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.CORRcontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.CORRiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.CORRiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.SAVEcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.SAVEcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.SAVEcontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.SAVEiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.SAVEiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.Importcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.Importcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.Importcontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.Importiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.Importiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.Presentationcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.Presentationcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.Presentationcontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.Presentationiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.Presentationiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.iframe-container {
+				position: relative;
+				padding-bottom: 140%;
+				height: 0;
+				overflow: hidden;
+			}
+			.iframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			h2{
+				text-decoration: underline;
+			}
+			#content
+			{
+				display: none;
+			}
+			#checkboxList {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#checkboxList li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#ContourcheckboxList {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#ContourcheckboxList li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#ModelcheckboxList {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#ModelcheckboxList li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#ProfilecheckboxListOne {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#ProfilecheckboxListOne li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#ProfilecheckboxListTwo {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#ProfilecheckboxListTwo li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#ProfilecheckboxListThree {
+				display: flex;
+				flex-wrap: wrap;
+				list-style-type: none;
+				padding: 0;
+			}
+			#ProfilecheckboxListThree li {
+				width: calc(10% - 12px);
+				margin-right: 10px;
+				margin-bottom: 10px;
+			}
+			#selectedRowData {
+				width: 100%;
+				max-width: 1100px;
+				border-collapse: collapse;
+				font-size: 11px;
+			}
+			.map-container {
+				height: 620px;
+				width: 100%;
+				max-width: 1100px;
+				margin-bottom: 20px;
+			}
+			@media only screen and (max-width: 1100px) {
+				.map-container {
+					width: 100%;
+					margin: auto;
+				}
+			}
+			img {
+				max-width: 100%;
+				height: auto;
+				display: block;
+				margin: 0 auto;
+				float: left;
+			}
+			.image-break {
+				clear: both;
+			}
+			@media only screen and (max-width: 1100px) {
+				img {
+					width: 100%;
+				}
+			}
+			.text-label {
+				background: none;
+				color: white;
+				font-size: 12px;
+				font-weight: bold;
+				text-shadow: 1px 1px 2px black;
+				text-align: center;
+				line-height: 1.5;
+				border: none;
+			}
+			.chart-container {
+				
+				width: 100%;
+				max-width: 1100px;
+			}
+
+			@media only screen and (max-width: 1100px) {
+				.chart-container {
+					width: 100%;
+					margin: auto;
+				}
+			}	
+			table {
+				width: 1000;
+				border-collapse: collapse;
+				border: 1px solid #ccc;
+				font-size: 12px;
+			}
+			th, td {
+				padding: 8px;
+				text-align: left;
+				border-bottom: 1px solid #ddd;
+			}
+			th 
+			{
+				background-color: #f2f2f2;
+			}
+			tr:nth-child(even) 
+			{
+				background-color: #f5f5f5;
+			}
+			tr:hover 
+			{
+				background-color: #e0e0e0;
+			}
+			.disclaimer-box {
+				padding: 10px;
+				width: 100%;
+				max-width: 1090px;
+				border: 1px solid #ccc;
+				border-radius: 10px;
+				background-color: #f9f9f9;
+				margin-top: 20px;
+				float: left;
+			}
+			.note-box {
+				width: 100%;
+				max-width: 1090px;
+				border: 1px solid #ccc;
+				border-radius: 10px;
+				background-color: #f9f9f9;
+				float: left;
+				margin-top: 20px;
+				margin-bottom: 20px;
+				padding: 10px;
+			}
+			#plot-container {
+			  display: flex;
+			  align-items: center; /* Center vertically */
+			}
+
+			#plot {
+			  flex: 1;
+			}
+			#Sectionslider-container {
+			  display: flex;
+			  flex-direction: column;
+			  justify-content: center;
+			  height: 100%; /* Match height of the plot */
+			}
+			#Sectionslider {
+			  margin: auto;
+			  
+			  height: 100%; /* Match height of the color bar */
+			  width: 10px; /* Adjust width as needed */
+			}
+			#Sectionmax-value {
+			  text-align: center;
+			  margin-top: 10px; /* Move the max value label 10px lower */
+			}
+			#controls {
+				margin-bottom: 20px;
+			}
+			#description {
+				width: 800px; /* Adjust this value as needed to make the text box wider */
+			}		
+			.block-container {
+				border: 2px solid lightgrey;
+				padding: 5px; /* Adds some padding inside the border */
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}		
+			.newtable-container {
+				overflow-x: auto; /* Enables horizontal scrolling */
+				max-width: 100%; /* Ensures the container does not exceed the parent width */
+				margin-bottom: 10px; /* Adds some space below the table for the button */
+			}
+
+			/* Optional: Make sure the table fills the width of the scrollable container */
+			table {
+				width: 100%; /* Ensures the table uses the full width available */
+				border-collapse: collapse; /* Optional: for a clean table look */
+				background-color: white;
+			}
+		
+			.Limitscollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.Limitscollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.Limitscontent {
+				padding: 0 10px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1090px;
+				margin: 0 auto;
+				margin-left: 0;
+				border-radius: 10px;
+			}
+			.Limitsiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 2300px;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 0px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1090px;
+				border-radius: 10px;
+			}
+			.Limitsiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}		
+			.Methcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.Methcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.Methcontent {
+				padding: 0 10px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1090px;
+				margin: 0 auto;
+				margin-left: 0;
+				border-radius: 10px;
+			}
+			.Methiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1400px;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 0px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1090px;
+				border-radius: 10px;
+			}
+			.Methiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.editform-container {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+			.editform-row {
+				display: flex;
+				align-items: left;
+				gap: 10px;
+			}
+			.editform-row label {
+				min-width: 80px; /* Adjust this width as needed */
+				
+			}
+			.editform-row input {
+				flex-grow: 1;
+				min-width: 80px;
+				max-width: 150px;
+			}
+			.Temperaturecollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.Temperaturecollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.Temperaturecontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.Temperatureiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.Temperatureiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}		
+			.DEFcollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.DEFcollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.DEFcontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.DEFiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.DEFiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}			
+			.POINTScollapsible {
+				background-color: #f1f1f1;
+				color: #333;
+				cursor: pointer;
+				padding: 10px;
+				width: 100%;
+				border: 1px solid #ccc;
+				text-align: left;
+				outline: none;
+				font-size: 14px;
+				transition: 0.4s;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+				position: relative;
+				border-radius: 10px;
+			}
+			.POINTScollapsible::after {
+				content: '▼';
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.POINTScontent {
+				padding: 0 0px;
+				display: none;
+				overflow: hidden;
+				background-color: #f1f1f1;
+				max-width: 1110px;
+				margin: 0 auto;
+				margin-left: 0;
+			}
+			.POINTSiframe-container {
+				position: relative;
+				/*padding-bottom: 140%;*/
+				height: 1000;
+				overflow: hidden;
+				border: 2px solid lightgrey;
+				padding: 5px;
+				display: inline-block; /* Ensures the container sizes to its content */
+				box-sizing: border-box;
+				background-color: #f9f9f9;
+				width: 100%;
+				max-width: 1110px;
+				border-radius: 10px;
+			}
+			.POINTSiframe-container iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+		</style>
+	
+<style id="gv-dataset-description-help-css">
+/* Dataset description help styled to match the report's light grey/white theme. */
+.gv-dataset-help-btn{
+  width:auto!important;min-width:36px!important;max-width:42px!important;height:34px!important;
+  padding:0 10px!important;margin:0 0 0 8px!important;border-radius:5px!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;
+  font-weight:700!important;line-height:1!important;background:#555!important;
+  border:1px solid #444!important;color:#fff!important;box-shadow:0 2px 5px rgba(0,0,0,.15)!important;
+  transition:background-color .3s ease, transform .12s ease, box-shadow .12s ease!important;
+}
+.gv-dataset-help-btn:hover{background:#6c757d!important;transform:translateY(-1px)!important;border-color:#555!important;box-shadow:0 3px 7px rgba(0,0,0,.18)!important;}
+.gv-dataset-help-btn:focus{outline:2px solid #999;outline-offset:2px;}
+.gv-dataset-help-btn i{font-size:15px!important;line-height:1!important;color:#fff!important;}
+.gv-dataset-help-btn .gv-help-fallback-icon{display:inline-block;font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:900;line-height:1;color:#fff;}
+.gv-dataset-help-btn i:empty + .gv-help-fallback-icon{display:inline-block;}
+.gv-dataset-select-help-row{display:flex;align-items:center;gap:8px;width:100%;}
+.gv-dataset-select-help-row select{flex:1 1 auto!important;min-width:0!important;}
+.gv-dataset-shortdesc{
+  margin:8px 0 12px 0;padding:10px 12px;border-radius:10px;background:#f9f9f9;
+  border:1px solid #ccc;color:#333;font-size:12.5px;line-height:1.45;
+}
+.gv-dataset-shortdesc strong{color:#555;font-weight:700;}
+.gv-dataset-modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:2147483646;padding:18px;box-sizing:border-box;}
+.gv-dataset-modal-overlay.gv-open{display:flex;}
+.gv-dataset-modal{width:min(980px,100%);max-height:min(88vh,820px);display:flex;flex-direction:column;overflow:hidden;border-radius:10px;background:#f9f9f9;color:#333;border:1px solid #ccc;box-shadow:0 12px 40px rgba(0,0,0,.22);}
+.gv-dataset-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 18px;border-bottom:1px solid #ccc;background:#f1f1f1;}
+.gv-dataset-modal-title{font-weight:700;font-size:17px;line-height:1.2;color:#555;}
+.gv-dataset-modal-subtitle{font-size:12px;color:#666;margin-top:4px;}
+.gv-dataset-modal-close{width:38px!important;min-width:38px!important;max-width:38px!important;height:38px!important;padding:0!important;border-radius:5px!important;background:#555!important;color:#fff!important;font-size:22px!important;border:1px solid #444!important;}
+.gv-dataset-modal-close:hover{background:#6c757d!important;}
+.gv-dataset-modal-body{overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 20px;background:#f9f9f9;}
+.gv-dataset-help-card{background:#fff;border:1px solid #ccc;border-radius:10px;padding:16px;margin:0 0 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.gv-dataset-help-card h3{margin:0 0 8px;color:#555;font-size:16px;line-height:1.25;text-decoration:underline;}
+.gv-dataset-help-card h4{margin:17px 0 8px;font-size:12px;color:#555;text-transform:uppercase;letter-spacing:.08em;}
+.gv-dataset-help-card p,.gv-dataset-help-card li{font-size:13.5px;line-height:1.62;color:#333;}
+.gv-dataset-help-card ul{margin:8px 0 0;padding-left:19px;}
+.gv-dataset-help-card .gv-lay-summary{font-size:14px;background:#f1f1f1;border-left:3px solid #6c757d;border-radius:8px;padding:10px 12px;margin:10px 0 12px;color:#333;}
+.gv-dataset-equation{background:#f9f9f9;border:1px solid #ccc;border-radius:8px;padding:12px 14px;margin:8px 0 10px;overflow:auto;}
+.gv-dataset-equation .eq{font:16px/1.65 Georgia,'Times New Roman',serif;color:#333;white-space:nowrap;}
+.gv-dataset-equation .eq-note{font-size:12px;line-height:1.45;color:#555;margin-top:6px;}
+.gv-dataset-var-table{width:100%;border-collapse:collapse;margin:8px 0 0;background:#fff!important;min-width:0!important;border:1px solid #ccc!important;}
+.gv-dataset-var-table th,.gv-dataset-var-table td{border:1px solid #ddd!important;padding:8px!important;font-size:12.5px!important;line-height:1.4!important;color:#333!important;background:#fff!important;vertical-align:top;}
+.gv-dataset-var-table th{color:#333!important;background:#f2f2f2!important;text-transform:uppercase;letter-spacing:.05em;font-size:11px!important;}
+.gv-dataset-var-table tr:nth-child(even) td{background:#f5f5f5!important;}
+.gv-dataset-pill{display:inline-block;font-size:11px;color:#333;background:#f1f1f1;border:1px solid #ccc;border-radius:999px;padding:4px 8px;margin:0 6px 7px 0;}
+.gv-dataset-note{font-size:12.5px!important;color:#555!important;border-top:1px solid #ccc;padding-top:10px;margin-top:12px!important;}
+.gv-dataset-help-list{display:grid;grid-template-columns:1fr;gap:10px;}
+.gv-dataset-help-list details{border:1px solid #ccc;border-radius:10px;background:#fff;overflow:hidden;}
+.gv-dataset-help-list summary{cursor:pointer;padding:12px 14px;color:#333;font-weight:700;background:#f1f1f1;}
+.gv-dataset-help-list .gv-dataset-help-card{margin:0;border:0;border-top:1px solid #ccc;border-radius:0;box-shadow:none;}
+@media (max-width:640px){
+  .gv-dataset-modal-overlay{align-items:flex-end;padding:0;}
+  .gv-dataset-modal{width:100%;max-height:90vh;border-radius:10px 10px 0 0;}
+  .gv-dataset-modal-head{padding:12px 14px;}
+  .gv-dataset-modal-body{padding:12px 14px 16px;}
+  .gv-dataset-select-help-row{gap:6px;}
+  .gv-dataset-help-btn{min-width:32px!important;height:32px!important;padding:0 9px!important;margin-left:4px!important;}
+  .gv-dataset-var-table{display:block;overflow-x:auto;}
+  .gv-dataset-equation .eq{font-size:15px;white-space:normal;}
+}
+</style>
+
+<script id="gv-dataset-description-help-js">
+(function(){
+  window.GV_DATASET_DESCRIPTION_HELP_INSTALLED=true;
+
+  function gvEsc(text){return String(text==null?'':text).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function gvNorm(text){return String(text||'').toLowerCase().replace(/[^a-z0-9]+/g,'');}
+  function gvCleanTitle(text){return String(text||'Dataset').replace(/Calculated\s+/ig,'').replace(/Estimate/ig,'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();}
+  function gvArray(v){return Array.isArray(v)?v:(v?[v]:[]);}
+
+  const COMMON_NOTE='All GeoVue values are interpreted estimates from processed electro-seismic/geophysical response attributes and should be evaluated with field conditions, calibration data, acquisition quality, geological plausibility and the project risk/confidence metrics.';
+
+  const SUMMARY_HELP={
+    primaryAquifer:{title:'Primary Aquifer Detected / Sustainable Yield',unit:'L/s',short:'The main interpreted water-bearing target and its realistic long-term yield estimate.',detail:'This is the principal recommended aquifer target for the selected point. The value shown is the calculated sustainable yield, which is intended to represent a realistic long-term pumping rate for the interpreted aquifer system rather than the absolute maximum flow that may occur during short-term development or air-lift testing. The estimate follows the report definition by combining interpreted aquifer area, volume, composition, minimum and maximum yield bounds, risk, confidence and the aquifers intersected below the static water level or user-defined casing depth.',equations:[['Q_s = W_c · F(A,V,K,T,S,b,C_a) · (1 - R/100) · C/100','Representative weighting form for the displayed sustainable yield. The exact implementation may use project-specific scaling and calibration.']],variables:[['Q_s','sustainable yield','L/s'],['W_c','calibration/normalisation factor','project-specific'],['A','interpreted aquifer influence area','m²'],['V','interpreted saturated aquifer volume','m³'],['K','hydraulic conductivity','m/day'],['T','transmissivity','m²/day'],['S','storativity','dimensionless'],['b','saturated aquifer thickness','m'],['C_a','aquifer composition/fracture-connectivity factor','dimensionless'],['R','calculated risk','%'],['C','calculated confidence','%']],uses:['Ranking drilling targets and comparing expected point performance.','Selecting target intervals for drilling and completion design.','Communicating a realistic production estimate between the minimum and maximum yield bounds.'],limitations:['Not a pump-test result and should be confirmed by drilling, lithology, borehole logging and pumping tests.','Sensitive to the interpreted water level, casing depth, aquifer geometry and fracture connectivity.','Local barriers, anisotropy, boundary effects and seasonal recharge can cause actual sustainable yield to differ from the estimate.']},
+    minimumYield:{title:'Minimum Yield',unit:'L/s',short:'The conservative lower-bound expected yield for the selected point.',detail:'Minimum yield is the low-side yield estimate for the selected point if drilled to the specified depth. Following the report definition, it assumes no significant fractures or dual-porosity features are intersected and therefore represents the lowest calculated yield for the point. Aquifer intervals above the interpreted static water level or user-defined casing depth are excluded.',equations:[['Q_min = F_min(K,b,S,A) · C/100','Conservative yield weighting form.']],variables:[['Q_min','minimum yield','L/s'],['K','hydraulic conductivity','m/day'],['b','saturated aquifer thickness','m'],['S','storativity','dimensionless'],['A','effective contributing area','m²'],['C','confidence weighting','%']],uses:['Lower-bound planning for bore yield expectations.','Risk-aware comparison of candidate drilling points.'],limitations:['Will understate yield where major connected fractures or dual porosity are encountered.','Depends on correct exclusion of unsaturated or cased-off intervals.']},
+    maximumYield:{title:'Maximum Yield',unit:'L/s',short:'The optimistic upper-bound yield if strong connected fractures are intersected.',detail:'Maximum yield is the high-side estimate for the selected point if drilled to the specified depth. Following the report definition, it assumes large, extensive, well-connected and developed fractures or dual-porosity formations are intersected. It represents the highest calculated yield for the point, excluding intervals above the static water level or user-defined casing depth.',equations:[['Q_max = F_max(K,b,S,A,F_c)','Optimistic yield weighting form including fracture connectivity.']],variables:[['Q_max','maximum yield','L/s'],['K','hydraulic conductivity','m/day'],['b','saturated aquifer thickness','m'],['S','storativity','dimensionless'],['A','effective contributing area','m²'],['F_c','fracture or dual-porosity connectivity factor','dimensionless']],uses:['Understanding upside potential.','Designing drilling/development contingencies and pump-test ranges.'],limitations:['Not guaranteed; it requires favourable fracture interception and hydraulic connection.','May overestimate practical production where recharge, bore diameter, screen design or boundary effects limit flow.']},
+    risk:{title:'Risk',unit:'%',short:'How likely the recommended yield/depth outcome is to underperform.',detail:'Risk is the calculated total risk of attaining the specified yield parameters at the recommended point. The report defines it as a function of site noise content, data correlation, signal-to-noise ratio and number of strikes used in processing. Higher risk means the interpretation has weaker support or greater uncertainty.',equations:[['R = 100 · W(n, 1-r, 1/SNR, 1/N_s, U)','Generic risk weighting form.']],variables:[['R','risk','%'],['n','normalised noise level','dimensionless'],['r','correlation coefficient or correlation score','0-1 or %'],['SNR','signal-to-noise ratio','dimensionless'],['N_s','number of valid strikes used','count'],['U','uncertainty term','dimensionless']],uses:['Screening points where recommendations need more caution.','Communicating uncertainty in drilling outcomes.'],limitations:['Risk is an interpretation quality metric, not a direct probability from controlled drilling statistics unless locally calibrated.','Low risk does not remove geological uncertainty or drilling execution risk.']},
+    confidence:{title:'Confidence',unit:'%',short:'How strongly the data supports the recommended yield and aquifer interpretation.',detail:'Confidence is the calculated measure of confidence in attaining the point-specific yield parameters. The report defines it using interpreted area, volume, minimum and maximum yield, correlating points and aquifer composition below the selected point.',equations:[['C = 100 · W(A,V,Q_min,Q_max,r,N_p,C_a)','Generic confidence weighting form.']],variables:[['C','confidence','%'],['A','interpreted aquifer area','m²'],['V','interpreted aquifer volume','m³'],['Q_min','minimum yield','L/s'],['Q_max','maximum yield','L/s'],['r','correlation/support between data sets','dimensionless'],['N_p','number/distribution of supporting points','count'],['C_a','aquifer composition factor','dimensionless']],uses:['Prioritising robust targets.','Balancing yield potential against data support.'],limitations:['Confidence depends on model assumptions, point spacing and acquisition quality.','It does not guarantee the presence of a productive borehole at metre-scale drilling tolerances.']},
+    drillingDepth:{title:'Recommended Drilling Depth',unit:'m below ground level',short:'The proposed maximum depth to drill to intersect the interpreted target aquifer intervals.',detail:'Recommended drilling depth is the maximum depth to which the point should be drilled. It is selected to intersect the interpreted producing intervals while considering static water level, casing depth, vertical resolution, uncertainty and practical completion requirements.',equations:[['D_rec = max(D_target) + ΔD','Recommended depth as deepest target interval plus allowance.']],variables:[['D_rec','recommended drilling depth','m bgl'],['D_target','bottom depth of target aquifer interval','m bgl'],['ΔD','allowance for uncertainty/completion','m']],uses:['Drilling design and depth budgeting.','Defining completion and pump-test planning.'],limitations:['Should be revised with actual cuttings, water strikes, geophysical logs and drilling conditions.','Very thin intervals may be below the practical vertical resolution of the interpretation.']},
+    groundwaterLevel:{title:'Groundwater Level',unit:'m below ground level',short:'The interpreted depth to static groundwater level.',detail:'The groundwater-level estimate is used to distinguish saturated from unsaturated intervals. Yield estimates generally exclude aquifers above the specified static water level or above a user-defined casing depth.',equations:[['z_w = z_g - h_w','Water-level elevation relation.']],variables:[['z_w','groundwater-level elevation','m asl'],['z_g','ground elevation','m asl'],['h_w','depth to water below ground','m']],uses:['Excluding unsaturated intervals from yield estimates.','Supporting casing, completion and drilling recommendations.'],limitations:['Static water level can vary seasonally and after pumping.','The estimate should be checked against nearby bore records and drilling observations.']},
+    latitude:{title:'Latitude',unit:'WGS84 decimal degrees',short:'The north-south coordinate of the selected point.',detail:'Latitude identifies the north-south position of the survey point in the WGS84 geographic coordinate reference system. It is used for mapping, spatial interpolation and positioning of sections and models.',equations:[['φ_lat = WGS84 latitude','Coordinate notation.']],variables:[['φ_lat','latitude','decimal degrees']],uses:['Point mapping and spatial interpolation.'],limitations:['Coordinate accuracy depends on GPS quality and any manual edits.']},
+    longitude:{title:'Longitude',unit:'WGS84 decimal degrees',short:'The east-west coordinate of the selected point.',detail:'Longitude identifies the east-west position of the survey point in the WGS84 geographic coordinate reference system. It is used for mapping, spatial interpolation and positioning of sections and models.',equations:[['λ_lon = WGS84 longitude','Coordinate notation.']],variables:[['λ_lon','longitude','decimal degrees']],uses:['Point mapping and spatial interpolation.'],limitations:['Coordinate accuracy depends on GPS quality and any manual edits.']},
+    elevation:{title:'Elevation',unit:'m above sea level',short:'The ground elevation used for depth-to-elevation conversion.',detail:'Elevation is the point ground level relative to mean sea level. It anchors formation depths, sections, profiles and model surfaces by converting depth below ground level into absolute elevation.',equations:[['z_i = z_g - d_i','Depth-to-elevation conversion.']],variables:[['z_i','elevation of interpreted interval/interface','m asl'],['z_g','ground elevation','m asl'],['d_i','depth below ground level','m']],uses:['Building cross sections, profiles and 3D models.'],limitations:['Errors in elevation shift all interpreted layer elevations at that point.']}
+  };
+
+  const PARAM_HELP={
+    sustainableyield:{title:'Sustainable Yield',short:'A realistic long-term groundwater yield estimate for the interpreted aquifer.',detail:'Sustainable yield estimates the pumping rate that the interpreted aquifer system should be able to support over time. It combines aquifer geometry, hydraulic properties, storage, aquifer composition, fracture connectivity, risk and confidence. It should be treated as a decision-support estimate between the conservative minimum yield and optimistic maximum yield.',equations:[['Q_s = W_c · F(A,V,K,T,S,b,C_a) · (1 - R/100) · C/100','Generic sustainable-yield weighting relationship.'],['T = K · b','Transmissivity relationship used in many yield assessments.']],variables:[['Q_s','sustainable yield','L/s'],['W_c','calibration/normalisation factor','project-specific'],['A','aquifer influence area','m²'],['V','saturated aquifer volume','m³'],['K','hydraulic conductivity','m/day'],['T','transmissivity','m²/day'],['S','storativity','dimensionless'],['b','saturated thickness','m'],['C_a','aquifer/fracture composition factor','dimensionless'],['R','risk','%'],['C','confidence','%']],uses:['Prioritising drilling targets.','Estimating practical bore production.','Comparing local and wide-area aquifer contribution.'],limitations:['Not a replacement for drilling and pumping tests.','Sensitive to aquifer boundaries, anisotropy, recharge, seasonal water levels and fracture connectivity.']},
+    minimumyield:{title:'Minimum Yield',short:'A conservative lower-bound yield estimate.',detail:'Minimum yield represents the lowest calculated yield expected from an interpreted aquifer interval. It assumes limited fracture contribution and relies mainly on matrix/pore-space hydraulic behaviour. In recommendation tables it is used to communicate downside yield expectation.',equations:[['Q_min = F_min(K,b,S,A) · C/100','Conservative yield weighting form.']],variables:[['Q_min','minimum yield','L/s'],['K','hydraulic conductivity','m/day'],['b','saturated thickness','m'],['S','storativity','dimensionless'],['A','effective contributing area','m²'],['C','confidence','%']],uses:['Conservative planning and risk screening.'],limitations:['May understate production where connected fracture networks are present.']},
+    maximumyield:{title:'Maximum Yield',short:'An optimistic upper-bound yield estimate.',detail:'Maximum yield represents the highest calculated yield expected if favourable fracture or dual-porosity pathways are intersected. It is useful for understanding upside potential, but should not be treated as the expected long-term pumping rate.',equations:[['Q_max = F_max(K,b,S,A,F_c)','Optimistic yield weighting form.']],variables:[['Q_max','maximum yield','L/s'],['K','hydraulic conductivity','m/day'],['b','saturated thickness','m'],['S','storativity','dimensionless'],['A','effective contributing area','m²'],['F_c','fracture connectivity factor','dimensionless']],uses:['Upside yield assessment and pump-test planning.'],limitations:['Requires favourable drilling intersection and hydraulic connection.']},
+    groundwaterlevel:{title:'Groundwater Level',short:'Estimated static water level below ground level.',detail:'Groundwater level is the interpreted static water depth used to separate saturated and unsaturated intervals. It affects yield calculations because formations above the water level generally do not contribute to saturated yield.',equations:[['z_w = z_g - h_w','Water-level elevation relation.']],variables:[['z_w','groundwater-level elevation','m asl'],['z_g','ground elevation','m asl'],['h_w','depth to water below ground','m']],uses:['Yield interval screening and casing-depth decisions.'],limitations:['Water level can vary seasonally and under pumping; verify with nearby wells or drilling.']},
+    drillingdepth:{title:'Drilling Depth',short:'Recommended or interpreted maximum target depth.',detail:'Drilling depth identifies how deep the bore should be drilled or how deep the interpreted target extends. It is driven by the lower bounds of target aquifer intervals, water level/casing constraints and uncertainty allowances.',equations:[['D_rec = max(D_target) + ΔD','Recommended depth relation.']],variables:[['D_rec','recommended drilling depth','m bgl'],['D_target','target interval bottom depth','m bgl'],['ΔD','practical/uncertainty allowance','m']],uses:['Bore design, cost planning and drilling guidance.'],limitations:['Must be adjusted to actual lithology, inflows, borehole stability and drilling conditions.']},
+    risk:SUMMARY_HELP.risk,
+    confidence:SUMMARY_HELP.confidence,
+    correlation:{title:'Correlation',short:'How consistently related data sets support the same interpretation.',detail:'Correlation quantifies agreement between measured or interpreted data attributes. In GeoVue outputs it is used as a quality-control indicator; high correlation supports stronger confidence, while low correlation can increase interpretation risk.',equations:[['r_{XY} = Σ[(X_i - X̄)(Y_i - Ȳ)] / √(Σ[X_i - X̄]^2 · Σ[Y_i - Ȳ]^2)','Pearson correlation coefficient.']],variables:[['r_{XY}','correlation coefficient','-1 to +1 or scaled %'],['X_i, Y_i','paired values from two data sets','various'],['X̄, Ȳ','mean values','various']],uses:['Quality control, confidence weighting and cross-attribute validation.'],limitations:['Correlation does not prove causation and can be distorted by outliers, limited point counts or spatial clustering.']},
+    signaltonoiseratio:{title:'Signal-to-Noise Ratio',short:'How strong the useful signal is compared with noise.',detail:'Signal-to-noise ratio measures the strength of the interpretable response relative to background or unwanted signal content. Higher SNR generally improves reliability and reduces risk.',equations:[['SNR = A_s / A_n','Amplitude ratio.'],['SNR_dB = 20 log10(A_s/A_n)','Decibel form for amplitude ratios.']],variables:[['SNR','signal-to-noise ratio','dimensionless'],['A_s','useful signal amplitude','instrument units'],['A_n','noise amplitude','instrument units']],uses:['Assessing acquisition quality and filtering effectiveness.'],limitations:['SNR can vary with coupling, source energy, cultural noise and processing choices.']},
+    noise:{title:'Noise',short:'Unwanted signal content that reduces interpretation reliability.',detail:'Noise represents background, cultural, instrument or processing artefacts not attributable to the target response. In electro-seismic work, noise can obscure weak interface responses and degrade confidence.',equations:[['N_RMS = √[(1/n) Σ n_i²]','Root-mean-square noise amplitude.']],variables:[['N_RMS','RMS noise','instrument units'],['n_i','individual noise sample','instrument units'],['n','number of samples','count']],uses:['Quality control and risk weighting.'],limitations:['Noise estimates depend on the chosen time window, filter settings and field conditions.']},
+    verticalresolution:{title:'Vertical Resolution',short:'The smallest layer separation that can be reliably distinguished.',detail:'Vertical resolution is the approximate minimum separation between interfaces that can be resolved as distinct features. It is controlled by wavelength, dominant frequency, velocity and processing bandwidth.',equations:[['Δz_min ≈ λ/4','Quarter-wavelength resolution criterion.'],['λ = V/f','Wavelength relationship.']],variables:[['Δz_min','minimum resolvable vertical separation','m'],['λ','wavelength','m'],['V','wave velocity','m/s'],['f','dominant frequency','Hz']],uses:['Judging whether thin aquifers or interfaces are resolvable.'],limitations:['True resolution varies with bandwidth, SNR, interface contrast and processing.']},
+    uncertainty:{title:'Uncertainty',short:'The plausible error range around an interpreted value or interface.',detail:'Uncertainty expresses the likely spread around an interpreted depth or derived parameter. It should be considered when selecting drilling depths, comparing thin intervals or making engineering decisions.',equations:[['U_% = 100 · Δx / |x|','Relative uncertainty.']],variables:[['U_%','relative uncertainty','%'],['Δx','estimated error or half-range','same as x'],['x','interpreted value','various']],uses:['Risk communication and design allowances.'],limitations:['Uncertainty is itself an estimate and may not include all geological or operational sources of error.']},
+    strikesused:{title:'Strikes Used',short:'The number of valid recorded strike events used in processing.',detail:'Strikes used indicates the count of usable strike records contributing to the processed result. More valid strikes generally improve statistical stability when other quality indicators are acceptable.',equations:[['N_s = count(s_i | s_i passes QC)','Valid strike count.']],variables:[['N_s','strikes used','count'],['s_i','individual strike record','record'],['QC','quality-control criteria','-']],uses:['Assessing data support and repeatability.'],limitations:['More strikes do not guarantee quality if coupling, noise or systematic bias is poor.']},
+    gpselevation:SUMMARY_HELP.elevation,
+    latitude:SUMMARY_HELP.latitude,
+    longitude:SUMMARY_HELP.longitude,
+    formationtype:{title:'Formation Type',short:'Interpreted lithological or material class.',detail:'Formation type is a categorical interpretation of the subsurface material or lithological group. It integrates mechanical, electrical, acoustic and hydrological response indicators to classify layers in a form useful for hydrogeological and engineering review.',equations:[['L = argmax_k P(k | x)','Classification form.']],variables:[['L','assigned formation/lithology class','class'],['k','candidate class','class'],['x','attribute vector from processed response','various']],uses:['Lithological context, drilling expectations and model visualisation.'],limitations:['It is an interpreted class, not a direct geological sample; confirm with cuttings, logs and local geology.']},
+    aquifertype:{title:'Aquifer Type',short:'Interpreted groundwater-bearing behaviour of a layer.',detail:'Aquifer type classifies the likely hydraulic behaviour of a formation interval, such as aquifer, aquiclude or fracture-dominated aquifer response. It supports yield and drilling decisions.',equations:[['A_t = argmax_k P(k | K,n,S,F_c,E)','Classification form.']],variables:[['A_t','aquifer type class','class'],['K','hydraulic conductivity','m/day'],['n','porosity','% or fraction'],['S','storage/storativity','dimensionless'],['F_c','fracture connectivity indicator','dimensionless'],['E','electro-seismic/electrical response attributes','various']],uses:['Target selection and hydrostratigraphic interpretation.'],limitations:['Classification can be ambiguous where lithology and saturation responses overlap.']},
+    formationcondition:{title:'Formation Condition',short:'Interpreted rock/soil condition such as competent, weathered or fractured.',detail:'Formation condition describes the interpreted mechanical and structural state of the interval. It helps identify weathering, fracturing, competence and potential drilling behaviour.',equations:[['C_f = F(G,K_b,ν,Q_p,Q_s,F_r)','Condition scoring form.']],variables:[['C_f','formation condition score/class','class or score'],['G','shear modulus','Pa'],['K_b','bulk modulus','Pa'],['ν','Poisson ratio','dimensionless'],['Q_p,Q_s','attenuation quality factors','dimensionless'],['F_r','fracture indicator','count or score']],uses:['Engineering appraisal, drilling risk and aquifer-fracture interpretation.'],limitations:['Requires geological confirmation; similar geophysical responses can have different geological causes.']},
+    fracturedaquifer:{title:'Fractured Aquifer Indicator',short:'Likelihood or intensity of fracture-controlled groundwater potential.',detail:'This indicator highlights intervals where secondary porosity or fracture connectivity may provide groundwater flow. Fractured aquifers can yield significantly more than matrix-only formations when fractures are open, connected and saturated.',equations:[['F_a = W(F_r, k_c, P_a, Q_s, E)','Fractured-aquifer indicator.']],variables:[['F_a','fractured aquifer indicator','score'],['F_r','fracture count/intensity','count or score'],['k_c','permeability contrast','dimensionless'],['P_a','aquifer probability','%'],['Q_s','sustainable yield support','L/s'],['E','electro-seismic/electrical attributes','various']],uses:['Identifying fracture-controlled bore targets.'],limitations:['Fracture presence does not guarantee open, connected or sustainable flow.']},
+    waterquality:{title:'Relative Water Quality',short:'A comparative geophysical indicator of likely water quality.',detail:'Relative water quality is an interpreted indicator derived primarily from electrical and formation-response attributes. It is intended for relative screening and should not be treated as laboratory water chemistry.',equations:[['WQ_r = 100 · S(ρ_e, σ, C_clay, L)','Relative quality scaling form.']],variables:[['WQ_r','relative water-quality estimate','%'],['ρ_e','apparent resistivity','Ω·m'],['σ','electrical conductivity','S/m'],['C_clay','clay content estimate','%'],['L','lithology/formation class','class'],['S(·)','normalised scaling function','-']],uses:['Comparative screening of intervals and points.'],limitations:['Cannot determine potability, contaminants or major ions; lab testing is required.']},
+    aquiferindicator:{title:'Formation Aquifer Indicator',short:'A composite indicator for whether a layer behaves like an aquifer.',detail:'The formation aquifer indicator combines porosity, permeability, saturation, storage, fracturing and response strength to identify intervals with likely groundwater-bearing behaviour.',equations:[['I_a = W(n,K,S_s,S_w,F_c,E)','Composite aquifer indicator.']],variables:[['I_a','aquifer indicator','score'],['n','porosity','fraction or %'],['K','hydraulic conductivity','m/day'],['S_s','specific storage','1/m'],['S_w','saturation','%'],['F_c','fracture connectivity','score'],['E','response attributes','various']],uses:['Screening aquifer intervals in sections, profiles and models.'],limitations:['Composite indicators should be interpreted with lithology and groundwater-level context.']},
+    formationfracturing:{title:'Formation Fracturing',short:'Estimated fracture intensity or count.',detail:'Formation fracturing estimates the intensity or count of fracture-related responses in an interval. Fracturing may increase secondary porosity and hydraulic conductivity but can also create unstable drilling conditions.',equations:[['F_r = count(f_i | f_i passes fracture-response threshold)','Fracture response count.']],variables:[['F_r','fracturing count/intensity','count or score'],['f_i','candidate fracture response','response unit']],uses:['Identifying secondary porosity and drilling risk.'],limitations:['Geophysical fracture indicators require confirmation from drilling, televiewer, core or cuttings.']},
+    aquiferprobability:{title:'Aquifer Probability',short:'Probability-like score that an interval behaves as an aquifer.',detail:'Aquifer probability expresses how strongly the available attributes support aquifer behaviour. It is a model-derived probability-like score, not a direct observed frequency unless calibrated to local bore outcomes.',equations:[['P(A|x) = 1 / (1 + e^{-η})','Logistic probability form.'],['η = β_0 + β^T x','Linear predictor form.']],variables:[['P(A|x)','probability of aquifer behaviour given attributes','0-1 or %'],['η','model score/logit','dimensionless'],['β_0, β','calibration coefficients','various'],['x','attribute vector','various']],uses:['Target screening and model visualisation.'],limitations:['Depends on calibration and may be biased where local geology differs from training assumptions.']},
+    aquicludeprobability:{title:'Aquiclude Probability',short:'Probability-like score that an interval acts as a low-permeability barrier.',detail:'Aquiclude probability expresses how strongly the attributes support a low-permeability or confining behaviour. It is useful for identifying barriers, perched conditions and poor-yield intervals.',equations:[['P(C|x) = 1 / (1 + e^{-η_c})','Logistic probability form.']],variables:[['P(C|x)','probability of aquiclude/confining behaviour','0-1 or %'],['η_c','aquiclude model score','dimensionless'],['x','attribute vector','various']],uses:['Identifying confining layers and low-yield intervals.'],limitations:['Clay-rich, cemented or dry intervals can produce similar responses; verify with geology.']},
+    porosity:{title:'Porosity',short:'How much of the formation volume is pore space.',detail:'Porosity is the fraction of bulk volume occupied by voids or pores. It controls storage capacity, saturation effects, electrokinetic coupling and hydraulic behaviour. Effective porosity may be lower than total porosity where pores are poorly connected.',equations:[['n = V_v / V_t','Porosity definition.'],['n_% = 100 · V_v / V_t','Percentage form.']],variables:[['n','porosity','fraction'],['n_%','porosity','%'],['V_v','void/pore volume','m³'],['V_t','total bulk volume','m³']],uses:['Hydrogeological storage assessment and geotechnical classification.'],limitations:['Geophysical porosity is indirect and depends on saturation, lithology, clay content and calibration.']},
+    effectiveporosity:{title:'Effective Porosity',short:'Connected pore volume that can transmit water.',detail:'Effective porosity is the connected portion of porosity contributing to groundwater flow. It is used in seepage velocity because water moves only through connected pore pathways.',equations:[['n_e = V_connected / V_t','Effective porosity definition.']],variables:[['n_e','effective porosity','fraction or %'],['V_connected','connected pore volume','m³'],['V_t','total bulk volume','m³']],uses:['Seepage velocity and transport calculations.'],limitations:['Can be much smaller than total porosity in clays, cemented materials or poorly connected pore systems.']},
+    saturation:{title:'Saturation',short:'How much pore space is filled with water.',detail:'Saturation is the fraction of pore volume occupied by water. It strongly affects electrical response, acoustic velocity, attenuation, yield estimates and whether an interval can contribute groundwater.',equations:[['S_w = V_w / V_v','Water saturation definition.']],variables:[['S_w','water saturation','fraction or %'],['V_w','water volume in pores','m³'],['V_v','total pore volume','m³']],uses:['Distinguishing saturated from unsaturated intervals.'],limitations:['Electrical and seismic saturation indicators are affected by clay, salinity and lithology.']},
+    hydraulicconductivity:{title:'Hydraulic Conductivity',short:'How easily water can move through the formation.',detail:'Hydraulic conductivity describes the ease with which water flows through a porous or fractured medium under a hydraulic gradient. It incorporates both the intrinsic permeability of the material and the properties of the fluid.',equations:[['q = -K · i','Darcy flux form.'],['K = k ρ_w g / μ','Relation to intrinsic permeability.']],variables:[['q','Darcy flux/specific discharge','m/day'],['K','hydraulic conductivity','m/day'],['i','hydraulic gradient','dimensionless'],['k','intrinsic permeability','m²'],['ρ_w','water density','kg/m³'],['g','gravitational acceleration','m/s²'],['μ','dynamic viscosity','Pa·s']],uses:['Yield, Darcy flux, transmissivity and groundwater-flow assessment.'],limitations:['Highly scale-dependent and anisotropic; fracture flow can dominate over matrix conductivity.']},
+    matrixhydraulicconductivity:{title:'Matrix Hydraulic Conductivity',short:'Total flow capacity including pore-space, fracture and weathering flow paths.',detail:'Matrix hydraulic conductivity estimates the combined flow capacity of the formation, including pore-space flow plus fracture and weathering dual-porosity flow enhancements. It represents all interpreted flow paths used in the matrix-flow calculation.',equations:[['q_m = -K_m · i','Matrix Darcy flux.']],variables:[['q_m','matrix Darcy flux','m/day'],['K_m','matrix hydraulic conductivity','m/day'],['i','hydraulic gradient','dimensionless']],uses:['Separating matrix flow from fracture contribution.'],limitations:['Represents a combined interpreted value and should still be calibrated against observed bore yield where available.']},
+    porespacehydraulicconductivity:{title:'Pore-Space Hydraulic Conductivity',short:'Flow capacity through connected pore spaces.',detail:'Pore-space hydraulic conductivity represents only the conductivity contribution from connected pore-space pathways. Fracture-flow and weathering-flow enhancements are ignored in this pore-space calculation.',equations:[['q_p = -K_p · i','Pore-space Darcy flux.']],variables:[['q_p','pore-space Darcy flux','m/day'],['K_p','pore-space hydraulic conductivity','m/day'],['i','hydraulic gradient','dimensionless']],uses:['Assessing primary porosity aquifers.'],limitations:['Excludes fracture and weathering dual-porosity enhancements, so it can be lower than the matrix-flow parameter where those additional flow paths are present.']},
+    transmissivity:{title:'Transmissivity',short:'The water-transmitting capacity of the saturated aquifer thickness.',detail:'Transmissivity combines hydraulic conductivity and saturated aquifer thickness. It represents how much water can move through a vertical slice of aquifer per unit width under a hydraulic gradient.',equations:[['T = K · b','Transmissivity definition for uniform K.']],variables:[['T','transmissivity','m²/day'],['K','hydraulic conductivity','m/day'],['b','saturated thickness','m']],uses:['Yield estimation, aquifer comparison and groundwater-flow calculations.'],limitations:['Assumes representative K and thickness; anisotropy and heterogeneity can cause large local variation.']},
+    matrixtransmissivity:{title:'Matrix Transmissivity',short:'Transmissivity of the primary formation matrix.',detail:'Matrix transmissivity estimates the combined water-transmitting capacity of the saturated interval, including pore-space flow plus fracture and weathering dual-porosity flow enhancements.',equations:[['T_m = K_m · b','Matrix transmissivity.']],variables:[['T_m','matrix transmissivity','m²/day'],['K_m','matrix hydraulic conductivity','m/day'],['b','saturated thickness','m']],uses:['Background aquifer productivity assessment.'],limitations:['Represents all interpreted flow paths within the saturated interval and should be treated as a combined matrix-flow estimate.']},
+    porespacetransmissivity:{title:'Pore-Space Transmissivity',short:'Transmissivity associated with connected pore-space flow.',detail:'Pore-space transmissivity estimates only the transmissive capacity contributed by connected pore-space flow across the saturated thickness. Fracture and weathering flow enhancements are ignored.',equations:[['T_p = K_p · b','Pore-space transmissivity.']],variables:[['T_p','pore-space transmissivity','m²/day'],['K_p','pore-space hydraulic conductivity','m/day'],['b','saturated thickness','m']],uses:['Primary porosity aquifer assessment.'],limitations:['Excludes fracture and weathering dual-porosity enhancements and therefore represents only the pore-space contribution to transmissivity.']},
+    permeability:{title:'Permeability',short:'The intrinsic ability of the material to transmit fluid.',detail:'Permeability is a property of the porous medium itself, independent of the fluid. It is related to hydraulic conductivity by fluid density and viscosity, and is often expressed in square metres or millidarcies.',equations:[['k = K μ / (ρ_w g)','Permeability from hydraulic conductivity.']],variables:[['k','intrinsic permeability','m² or md'],['K','hydraulic conductivity','m/day or m/s'],['μ','dynamic viscosity','Pa·s'],['ρ_w','water density','kg/m³'],['g','gravitational acceleration','m/s²']],uses:['Comparing hydraulic behaviour independently of fluid properties.'],limitations:['Indirect geophysical permeability is strongly calibration-dependent.']},
+    matrixpermeability:{title:'Matrix Permeability',short:'Intrinsic permeability including all interpreted flow paths.',detail:'Matrix permeability estimates the combined intrinsic permeability represented by all interpreted flow paths, including pore-space flow plus fracture and weathering dual-porosity flow enhancements.',equations:[['k_m = K_m μ / (ρ_w g)','Matrix permeability relation.']],variables:[['k_m','matrix permeability','m² or md'],['K_m','matrix hydraulic conductivity','m/day'],['μ','dynamic viscosity','Pa·s'],['ρ_w','water density','kg/m³'],['g','gravitational acceleration','m/s²']],uses:['Matrix-flow interpretation and comparison between lithologies.'],limitations:['Includes interpreted pore-space, fracture and weathering flow paths, but remains calibration-dependent.']},
+    porespacepermeability:{title:'Pore-Space Permeability',short:'Intrinsic permeability of connected pore space.',detail:'Pore-space permeability estimates only the intrinsic permeability contribution from connected pore spaces. Fracture-flow and weathering-flow enhancements are ignored in this pore-space calculation.',equations:[['k_p = K_p μ / (ρ_w g)','Pore-space permeability relation.']],variables:[['k_p','pore-space permeability','m² or md'],['K_p','pore-space hydraulic conductivity','m/day'],['μ','dynamic viscosity','Pa·s'],['ρ_w','water density','kg/m³'],['g','gravitational acceleration','m/s²']],uses:['Primary-porosity aquifer interpretation.'],limitations:['Affected by clay, cementation and pore connectivity assumptions; it does not include fracture or weathering dual-porosity contributions.']},
+    permeabilitycontrast:{title:'Permeability Contrast',short:'How sharply permeability changes between zones or components.',detail:'Permeability contrast is the ratio or relative difference between high- and low-permeability intervals or components. High contrast can indicate boundaries, fractures, barriers or preferential flow paths.',equations:[['C_k = k_high / k_low','Contrast ratio.'],['Δk_r = (k_2 - k_1) / k_1','Relative difference.']],variables:[['C_k','permeability contrast','dimensionless'],['k_high, k_low','higher and lower permeability','m² or md'],['Δk_r','relative permeability difference','dimensionless'],['k_1,k_2','comparison permeabilities','m² or md']],uses:['Identifying barriers, fracture zones and flow contrasts.'],limitations:['Ratios can become unstable when the lower permeability is very small.']},
+    specificstorage:{title:'Specific Storage',short:'Water released from storage per aquifer volume per metre of head decline.',detail:'Specific storage quantifies how much water a saturated porous medium releases from storage per unit volume for a unit decline in hydraulic head. It depends on compressibility of the aquifer skeleton and water.',equations:[['S_s = ρ_w g (α + nβ)','Specific storage relation.']],variables:[['S_s','specific storage','1/m'],['ρ_w','water density','kg/m³'],['g','gravitational acceleration','m/s²'],['α','aquifer skeleton compressibility','1/Pa'],['n','porosity','fraction'],['β','water compressibility','1/Pa']],uses:['Storage, diffusivity and transient groundwater response.'],limitations:['Compressibility estimates are indirect and can vary with stress state and lithology.']},
+    storativity:{title:'Storativity',short:'Water released from an aquifer per unit area per metre of head decline.',detail:'Storativity is the areal storage coefficient for an aquifer. For confined conditions it is commonly the product of specific storage and saturated thickness; for unconfined conditions it is closer to specific yield.',equations:[['S = S_s · b','Confined aquifer storativity.']],variables:[['S','storativity','dimensionless'],['S_s','specific storage','1/m'],['b','saturated thickness','m']],uses:['Yield, drawdown and aquifer diffusivity calculations.'],limitations:['Unconfined, leaky or fractured systems may not follow simple confined-aquifer assumptions.']},
+    diffusivity:{title:'Hydraulic Diffusivity',short:'How quickly hydraulic head changes move through the aquifer.',detail:'Hydraulic diffusivity is the ratio of transmissivity to storativity. It controls the rate at which pressure or head disturbances propagate through an aquifer.',equations:[['D_h = T / S','Hydraulic diffusivity.']],variables:[['D_h','hydraulic diffusivity','m²/day'],['T','transmissivity','m²/day'],['S','storativity','dimensionless']],uses:['Assessing transient aquifer response and pressure propagation.'],limitations:['Assumes representative transmissivity and storativity over the tested scale.']},
+    claycontent:{title:'Clay Content',short:'Estimated proportion of clay-rich material.',detail:'Clay content is an interpreted estimate of clay proportion or clay influence. Clay affects electrical conductivity, attenuation, permeability and water quality indicators, and can act as an aquitard or aquiclude.',equations:[['C_clay = 100 · S(σ,ρ_e,Q_p,Q_s,L)','Normalised clay-response scaling form.']],variables:[['C_clay','clay content estimate','%'],['σ','electrical conductivity','S/m'],['ρ_e','apparent resistivity','Ω·m'],['Q_p,Q_s','attenuation quality factors','dimensionless'],['L','lithological class','class']],uses:['Identifying low-permeability units and interpreting electrical response.'],limitations:['Salinity and saturation can mimic clay-rich electrical behaviour.']},
+    density:{title:'Density',short:'Mass per unit volume of the interpreted material.',detail:'Density is the bulk mass per unit volume of the formation or soil. It is a central geotechnical and geophysical parameter used in acoustic impedance, elastic modulus calculations, compaction assessment and lithological interpretation.',equations:[['ρ = m / V','Bulk density definition.'],['ρ = Z / V_p','Density from acoustic impedance and P-wave velocity.']],variables:[['ρ','bulk density','kg/m³'],['m','mass','kg'],['V','bulk volume','m³'],['Z','acoustic impedance','Pa·s/m or kg/(m²·s)'],['V_p','P-wave velocity','m/s']],uses:['Elastic property calculation, impedance interpretation and geotechnical assessment.'],limitations:['Indirect density estimates are affected by porosity, saturation, lithology and calibration.']},
+    shearmodulus:{title:'Shear Modulus',short:'Resistance of the material to shape change.',detail:'Shear modulus describes elastic stiffness under shear deformation. It is important for geotechnical stiffness, seismic response, rippability and ground-condition assessment.',equations:[['G = ρ V_s²','Dynamic shear modulus.']],variables:[['G','shear modulus','Pa'],['ρ','density','kg/m³'],['V_s','S-wave velocity','m/s']],uses:['Geotechnical stiffness and elastic property interpretation.'],limitations:['Dynamic modulus may differ from static laboratory or in-situ loading moduli.']},
+    bulkmodulus:{title:'Bulk Modulus',short:'Resistance of the material to volume change.',detail:'Bulk modulus describes compressional stiffness: how resistant a material is to uniform compression. It is influenced by mineral frame, porosity, saturation and pore-fluid effects.',equations:[['K_b = ρ(V_p² - 4V_s²/3)','Dynamic bulk modulus.']],variables:[['K_b','bulk modulus','Pa'],['ρ','density','kg/m³'],['V_p','P-wave velocity','m/s'],['V_s','S-wave velocity','m/s']],uses:['Elastic interpretation, compressibility and formation condition assessment.'],limitations:['Requires reliable velocity and density estimates; saturation strongly influences V_p.']},
+    youngsmodulus:{title:"Young's Modulus",short:'Axial elastic stiffness of the material.',detail:"Young's modulus describes stiffness in uniaxial tension or compression. It is commonly derived from shear modulus and Poisson's ratio for isotropic elastic materials.",equations:[['E = 2G(1+ν)','Young\'s modulus from shear modulus and Poisson\'s ratio.'],['E = 9K_bG/(3K_b+G)','Young\'s modulus from bulk and shear moduli.']],variables:[['E',"Young's modulus",'Pa'],['G','shear modulus','Pa'],['ν',"Poisson's ratio",'dimensionless'],['K_b','bulk modulus','Pa']],uses:['Engineering stiffness, foundation assessment and formation-condition interpretation.'],limitations:['Dynamic estimates can exceed static engineering moduli; anisotropy and fracturing reduce applicability of isotropic equations.']},
+    compressibility:{title:'Compressibility',short:'How much volume changes under pressure.',detail:'Compressibility is the inverse of bulk modulus and describes how much the material volume changes for a given pressure change. It contributes to specific storage and poroelastic behaviour.',equations:[['α = 1/K_b','Compressibility as inverse bulk modulus.']],variables:[['α','compressibility','1/Pa'],['K_b','bulk modulus','Pa']],uses:['Specific storage, poroelastic response and formation-condition assessment.'],limitations:['Stress-dependent and scale-dependent; fractures can increase effective compressibility.']},
+    poissonratio:{title:"Poisson's Ratio",short:'How much material expands sideways when compressed vertically.',detail:"Poisson's ratio is the ratio of lateral strain to axial strain. It helps characterise elastic behaviour, saturation effects and material type, and is often derived from P- and S-wave velocities.",equations:[['ν = (V_p² - 2V_s²) / [2(V_p² - V_s²)]','Velocity-based Poisson\'s ratio.']],variables:[['ν',"Poisson's ratio",'dimensionless'],['V_p','P-wave velocity','m/s'],['V_s','S-wave velocity','m/s']],uses:['Elastic property estimation and saturation/lithology interpretation.'],limitations:['Highly sensitive when V_p and V_s are uncertain; anisotropy violates simple isotropic assumptions.']},
+    specificvolume:{title:'Specific Volume',short:'Volume occupied per unit mass.',detail:'Specific volume is the inverse of density. It provides a compact way of expressing how much volume is occupied by a unit mass of material.',equations:[['v = 1/ρ','Specific volume.']],variables:[['v','specific volume','m³/kg'],['ρ','density','kg/m³']],uses:['Material property checks and density-related calculations.'],limitations:['Directly inherits uncertainty from density estimates.']},
+    sptn:{title:'SPT-N Estimate',short:'A geophysical proxy for penetration resistance/relative density.',detail:'The SPT-N estimate is a proxy for Standard Penetration Test N-value derived from interpreted stiffness, density, condition and lithology indicators. It is useful for screening ground conditions but is not a substitute for an actual SPT.',equations:[['N_60 ≈ F(ρ,G,E,C_f,L)','Correlation form for SPT-N proxy.']],variables:[['N_60','energy-corrected SPT blow count proxy','blows/0.3 m'],['ρ','density','kg/m³'],['G','shear modulus','Pa'],['E',"Young's modulus",'Pa'],['C_f','formation condition','score/class'],['L','lithology class','class']],uses:['Preliminary geotechnical screening.'],limitations:['Requires local calibration; not suitable as a design SPT value without geotechnical testing.']},
+    sptrqd:{title:'SPT/RQD Estimate',short:'A proxy for rock/ground quality based on stiffness and fracturing.',detail:'SPT/RQD estimate is a derived quality indicator combining penetration-resistance style behaviour with rock quality/fracture indicators. It supports preliminary engineering review.',equations:[['RQD_e ≈ F(F_s,C_f,G,Q_s)','Rock-quality proxy form.']],variables:[['RQD_e','estimated RQD/SPT quality proxy','% or score'],['F_s','fracture spacing/intensity indicator','score'],['C_f','formation condition','score/class'],['G','shear modulus','Pa'],['Q_s','S-wave attenuation quality factor','dimensionless']],uses:['Initial rock/ground quality screening.'],limitations:['Not a core-derived RQD; confirm with drilling/core logging where engineering design depends on it.']},
+    seismicpwavevelocity:{title:'Seismic P-Wave Velocity',short:'Speed of compressional seismic waves through the formation.',detail:'P-wave velocity is the propagation speed of compressional waves. It responds to density, stiffness, porosity, saturation and lithology and is used in elastic moduli and acoustic impedance calculations.',equations:[['V_p = Δx / Δt','Travel-time definition.'],['V_p = √[(K_b + 4G/3)/ρ]','Elastic isotropic relation.']],variables:[['V_p','P-wave velocity','m/s'],['Δx','travel path length','m'],['Δt','travel time','s'],['K_b','bulk modulus','Pa'],['G','shear modulus','Pa'],['ρ','density','kg/m³']],uses:['Elastic property, impedance and interface interpretation.'],limitations:['Affected by saturation, anisotropy, scale and picking/processing uncertainty.']},
+    acousticimpedance:{title:'Acoustic Impedance',short:'Resistance to seismic wave transmission across a formation.',detail:'Acoustic impedance combines density and P-wave velocity. Contrasts in acoustic impedance control reflection and transmission of seismic energy at layer interfaces.',equations:[['Z = ρ V_p','Acoustic impedance.'],['R = (Z_2 - Z_1)/(Z_2 + Z_1)','Normal-incidence reflection coefficient.']],variables:[['Z','acoustic impedance','Pa·s/m or kg/(m²·s)'],['ρ','density','kg/m³'],['V_p','P-wave velocity','m/s'],['R','reflection coefficient','dimensionless'],['Z_1,Z_2','impedance above/below interface','same as Z']],uses:['Interface contrast, reflection strength and formation-condition interpretation.'],limitations:['Requires reliable density and velocity; thin layers and attenuation can mask impedance contrasts.']},
+    frenzelradius:{title:'Fresnel Radius',short:'Approximate lateral footprint contributing to a seismic response.',detail:'The first Fresnel-zone radius estimates the lateral area around a reflection/conversion point that contributes coherently to the observed response. It helps understand spatial resolution and target footprint.',equations:[['r_F ≈ √(λ z / 2)','Approximate first Fresnel radius.'],['λ = V_p/f','Wavelength relation.']],variables:[['r_F','Fresnel radius','m'],['λ','wavelength','m'],['z','depth to target','m'],['V_p','P-wave velocity','m/s'],['f','dominant frequency','Hz']],uses:['Spatial-resolution assessment and interpretation footprint.'],limitations:['Approximation assumes simple geometry and representative velocity/frequency.']},
+    transmissioncoefficient:{title:'Transmission Coefficient',short:'Fraction of wave amplitude transmitted through an interface.',detail:'Transmission coefficient estimates the portion of incident wave amplitude transmitted across a boundary between formations with different acoustic impedance.',equations:[['T_A = 2Z_2/(Z_1+Z_2)','Amplitude transmission coefficient for normal incidence.']],variables:[['T_A','amplitude transmission coefficient','dimensionless'],['Z_1','incident-side acoustic impedance','Pa·s/m'],['Z_2','transmission-side acoustic impedance','Pa·s/m']],uses:['Understanding energy loss and interface response.'],limitations:['Simple form assumes normal incidence, planar interfaces and no mode conversion.']},
+    criticalangle:{title:'Critical Angle',short:'The angle where refraction travels along an interface.',detail:'Critical angle occurs when energy traveling from a slower to a faster medium refracts along the interface. It is controlled by velocity contrast.',equations:[['θ_c = sin⁻¹(V_1/V_2),  V_2 > V_1','Critical angle.']],variables:[['θ_c','critical angle','degrees'],['V_1','velocity in upper/slower medium','m/s'],['V_2','velocity in lower/faster medium','m/s']],uses:['Seismic interface and refraction interpretation.'],limitations:['Only applies where the lower medium is faster and assumptions of Snell’s law are reasonable.']},
+    seismicattenuationqp:{title:'Seismic Attenuation Qp',short:'Quality factor describing P-wave energy loss.',detail:'Qp is the compressional-wave quality factor. Low Qp indicates stronger attenuation and energy loss, often associated with fluids, fractures, clay content or poorly consolidated materials.',equations:[['Q_p = 2π E_stored / ΔE_cycle','Quality factor definition.'],['A(x) = A_0 e^{-π f x/(Q_p V_p)}','Amplitude attenuation form.']],variables:[['Q_p','P-wave quality factor','dimensionless'],['E_stored','stored wave energy','J'],['ΔE_cycle','energy lost per cycle','J'],['A(x)','amplitude after distance x','instrument units'],['f','frequency','Hz'],['x','travel distance','m'],['V_p','P-wave velocity','m/s']],uses:['Formation condition, fluid/fracture and signal-quality interpretation.'],limitations:['Q estimates depend on bandwidth, processing and geometric spreading corrections.']},
+    seismicattenuationqs:{title:'Seismic Attenuation Qs',short:'Quality factor describing S-wave energy loss.',detail:'Qs is the shear-wave quality factor. It reflects shear-wave attenuation and can indicate fracturing, unconsolidated materials or viscoelastic losses.',equations:[['Q_s = 2π E_stored / ΔE_cycle','Quality factor definition.'],['A(x) = A_0 e^{-π f x/(Q_s V_s)}','Amplitude attenuation form.']],variables:[['Q_s','S-wave quality factor','dimensionless'],['E_stored','stored wave energy','J'],['ΔE_cycle','energy lost per cycle','J'],['A(x)','amplitude after distance x','instrument units'],['f','frequency','Hz'],['x','travel distance','m'],['V_s','S-wave velocity','m/s']],uses:['Material damping, fracture and geotechnical condition assessment.'],limitations:['Requires careful separation of attenuation from scattering, coupling and processing effects.']},
+    seismicreflection:{title:'Seismic Reflection',short:'Interface response caused by acoustic impedance contrast.',detail:'Seismic reflection estimates the strength and polarity of reflected energy from an interface. It is controlled primarily by acoustic impedance contrast at normal incidence.',equations:[['R = (Z_2 - Z_1)/(Z_2 + Z_1)','Normal-incidence reflection coefficient.']],variables:[['R','reflection coefficient','dimensionless'],['Z_1','acoustic impedance above interface','Pa·s/m'],['Z_2','acoustic impedance below interface','Pa·s/m']],uses:['Interface interpretation and layer contrast assessment.'],limitations:['Real responses include angle effects, attenuation, scattering and converted modes.']},
+    apparentelectricfieldstrength:{title:'Apparent Electric Field Strength',short:'The interpreted electro-seismic electric-field response.',detail:'Apparent electric field strength represents the voltage gradient associated with the electro-seismic response. In seismo-electric theory, pressure changes and relative motion between pore fluid and rock can generate electrical potential through electrokinetic coupling. Interface contrasts can generate independent electromagnetic responses.',equations:[['E = -∇φ','Electric field as negative potential gradient.'],['φ = -C P','Streaming-potential relation.'],['C = ε ζ / (η σ)','Electrokinetic coefficient form.'],['J = σE + L(-∇P - ρ_f ü)','Seismo-electric current density form.']],variables:[['E','electric field','V/m'],['φ','electric potential / streaming potential','V'],['C','electrokinetic coupling coefficient','V/Pa'],['P','applied pressure','Pa'],['ε','pore-space permittivity','F/m'],['ζ','zeta potential','V'],['η','fluid viscosity','Pa·s'],['σ','electrical conductivity','S/m'],['J','current density','A/m²'],['L','electrokinetic coupling coefficient','various'],['ρ_f','fluid density','kg/m³'],['ü','solid-frame acceleration','m/s²']],uses:['Identifying electro-seismic interface responses and fluid-related contrasts.'],limitations:['Sensitive to grounding, electrode coupling, cultural electrical noise, fluid salinity, clay content and interface geometry.']},
+    apparentformationresistivity:{title:'Apparent Formation Resistivity',short:'How strongly the formation resists electrical current flow.',detail:'Apparent formation resistivity is an interpreted bulk electrical property affected by pore-fluid salinity, saturation, porosity, clay content and lithology. It is useful for hydrogeological screening but is not a standalone water-quality measurement.',equations:[['ρ_e = 1/σ','Resistivity-conductivity relation.'],['ρ_e ≈ a ρ_w n^{-m} S_w^{-p}','Archie-type clean formation relation.']],variables:[['ρ_e','apparent electrical resistivity','Ω·m'],['σ','electrical conductivity','S/m'],['a','tortuosity/lithology factor','dimensionless'],['ρ_w','pore-water resistivity','Ω·m'],['n','porosity','fraction'],['m','cementation exponent','dimensionless'],['S_w','water saturation','fraction'],['p','saturation exponent','dimensionless']],uses:['Water-quality screening, clay/saturation interpretation and electrical contrast mapping.'],limitations:['Archie-type relations are unreliable in clay-rich formations without correction and calibration; salinity and clay can produce similar low resistivity.']},
+    formationtemperature:{title:'Formation Temperature',short:'Estimated subsurface temperature of the interval.',detail:'Formation temperature estimates the temperature of a subsurface interval. It may be derived from depth and geothermal gradient assumptions or project-specific thermal indicators. It supports geothermal and groundwater heat-transfer assessment.',equations:[['T(z) = T_0 + G_T z','Geothermal gradient relation.']],variables:[['T(z)','temperature at depth z','°C'],['T_0','reference/surface temperature','°C'],['G_T','geothermal gradient','°C/m'],['z','depth','m']],uses:['Geothermal screening and heat-transfer potential calculations.'],limitations:['Local groundwater flow, topography and seasonal effects can perturb simple gradients.']},
+    terraingradient:{title:'Terrain Gradient',short:'Ground-surface slope around the point.',detail:'Terrain gradient is the elevation change per horizontal distance. In the app it supports terrain-driven groundwater-flow direction and Darcy-flux style estimates where a hydraulic gradient is approximated from topographic gradient.',equations:[['i_t = Δh/Δx','Gradient magnitude.']],variables:[['i_t','terrain gradient','dimensionless'],['Δh','elevation difference','m'],['Δx','horizontal distance','m']],uses:['Flow direction, Darcy flux and surface-controlled groundwater screening.'],limitations:['Topographic gradient is not always equal to hydraulic gradient, especially in confined or pumped systems.']},
+    flowdirection:{title:'Groundwater Flow Direction',short:'Estimated direction of groundwater movement.',detail:'Flow direction is the interpreted azimuth of hydraulic or terrain-driven gradient. It indicates the likely direction of groundwater movement under the assumptions used by the project.',equations:[['θ = atan2(∂h/∂x, ∂h/∂y)','Gradient azimuth form.']],variables:[['θ','flow direction azimuth','degrees'],['∂h/∂x','east-west head/elevation gradient','dimensionless'],['∂h/∂y','north-south head/elevation gradient','dimensionless']],uses:['Understanding upgradient/downgradient relationships and heat/solute movement.'],limitations:['Requires hydraulic-head confirmation where flow direction is critical.']},
+    darcyflux:{title:'Darcy Flux',short:'Specific discharge through the formation.',detail:'Darcy flux, or specific discharge, is the volumetric flow rate per unit cross-sectional area under a hydraulic gradient. It is not the same as pore-water velocity because it is averaged over the bulk area.',equations:[['q = -K i','Darcy’s law magnitude/sign convention.']],variables:[['q','Darcy flux / specific discharge','m/day'],['K','hydraulic conductivity','m/day'],['i','hydraulic gradient','dimensionless']],uses:['Groundwater-flow and heat-transport screening.'],limitations:['Assumes Darcy flow, representative K and gradient; fracture/turbulent flow can violate assumptions.']},
+    groundwaterflowrate:{title:'Groundwater Flow Rate',short:'Estimated groundwater flow per unit width or interval.',detail:'Groundwater flow rate converts Darcy flux into a flow through an interpreted saturated thickness or effective cross-section. In results it is best treated as a relative/engineering screening estimate.',equations:[['Q = q A_c','Flow through cross-sectional area.'],['Q′ = q b','Flow per unit width.']],variables:[['Q','groundwater flow rate','m³/day'],['Q′','flow per metre width','m²/day'],['q','Darcy flux','m/day'],['A_c','effective cross-sectional area','m²'],['b','saturated thickness','m']],uses:['Flow contribution and advective heat transport assessment.'],limitations:['Requires representative saturated thickness, gradient and hydraulic conductivity.']},
+    seepagevelocity:{title:'Seepage Velocity',short:'Average velocity of water through connected pores.',detail:'Seepage velocity converts Darcy flux into the average linear velocity through connected pore space. It is typically higher than Darcy flux because flow occurs only through effective porosity.',equations:[['v_s = q / n_e','Seepage velocity.']],variables:[['v_s','seepage velocity','m/day'],['q','Darcy flux','m/day'],['n_e','effective porosity','fraction']],uses:['Groundwater travel-time, contaminant and heat-transfer screening.'],limitations:['Preferential fracture flow and heterogeneity can cause velocities much higher than the average estimate.']},
+    advectiveheattransferpotential:{title:'Advective Heat Transfer Potential',short:'Potential for groundwater flow to carry heat.',detail:'Advective heat transfer potential estimates the capacity of moving groundwater to transport thermal energy. It combines groundwater flow with water density and heat capacity and is useful for geothermal screening.',equations:[['Ė_h = ρ_w c_w Q ΔT','Heat-transfer rate.'],['H_p = ρ_w c_w Q','Heat capacity flow rate without ΔT.']],variables:[['Ė_h','advective heat-transfer rate','W'],['H_p','heat-transfer potential per temperature difference','W/°C'],['ρ_w','water density','kg/m³'],['c_w','specific heat capacity of water','J/(kg·°C)'],['Q','groundwater flow rate','m³/s'],['ΔT','temperature difference','°C']],uses:['Geothermal screening and groundwater heat-exchange assessment.'],limitations:['Actual heat extraction depends on bore design, recharge, thermal breakthrough, chemistry and regulatory constraints.']}
+  };
+
+  // Aliases for labels that appear in different tabs or with spelling variants.
+  const ALIASES=[
+    ['susyield','sustainableyield'],['sustainableyield','sustainableyield'],['minyield','minimumyield'],['maxyield','maximumyield'],['groundwaterlevel','groundwaterlevel'],['waterlevel','groundwaterlevel'],['drilldepth','drillingdepth'],['recdrilldepth','drillingdepth'],['interpretionconfidence','confidence'],['interpretationconfidence','confidence'],['measuredcorrelation','correlation'],['signaltonoise','signaltonoiseratio'],['snr','signaltonoiseratio'],['strikesused','strikesused'],['gpselevation','gpselevation'],['formationtype','formationtype'],['aquifertype','aquifertype'],['formationcondition','formationcondition'],['fracturedaquifer','fracturedaquifer'],['waterquality','waterquality'],['formationaquiferindicator','aquiferindicator'],['formationfracturing','formationfracturing'],['aquiferprobability','aquiferprobability'],['aquicludeprobability','aquicludeprobability'],['porosity','porosity'],['effectiveporosity','effectiveporosity'],['saturation','saturation'],['matrixhydraulicconductivity','matrixhydraulicconductivity'],['porespacehydraulicconductivity','porespacehydraulicconductivity'],['hydraulicconductivity','hydraulicconductivity'],['matrixtransmissivity','matrixtransmissivity'],['porespacetransmissivity','porespacetransmissivity'],['transmissivity','transmissivity'],['matrixpermeability','matrixpermeability'],['porespacepermeability','porespacepermeability'],['permeabilitycontrast','permeabilitycontrast'],['permeability','permeability'],['specificstorage','specificstorage'],['storativity','storativity'],['diffusivity','diffusivity'],['claycontent','claycontent'],['density','density'],['shearmodulus','shearmodulus'],['bulkmodulus','bulkmodulus'],['youngsmodulus','youngsmodulus'],['compressibility','compressibility'],['poissonratio','poissonratio'],['specificvolume','specificvolume'],['sptn','sptn'],['sptrqd','sptrqd'],['rqd','sptrqd'],['seismicpwavevelocity','seismicpwavevelocity'],['pwavevelocity','seismicpwavevelocity'],['acousticimpeadance','acousticimpedance'],['acousticimpedance','acousticimpedance'],['frenzelradius','frenzelradius'],['fresnelradius','frenzelradius'],['transmittioncoefficient','transmissioncoefficient'],['transmissioncoefficient','transmissioncoefficient'],['criticalangle','criticalangle'],['seismicattenuationqp','seismicattenuationqp'],['seismicattenuationqs','seismicattenuationqs'],['seismicreflection','seismicreflection'],['apparentfieldstrength','apparentelectricfieldstrength'],['apparentelectricfieldstrength','apparentelectricfieldstrength'],['apparentformationresistivity','apparentformationresistivity'],['soilapparentresistivity','apparentformationresistivity'],['resistivity','apparentformationresistivity'],['formationtemperature','formationtemperature'],['temperature','formationtemperature'],['terraingradient','terraingradient'],['groundwaterflowdirection','flowdirection'],['flowdirection','flowdirection'],['darcyflux','darcyflux'],['groundwaterflowrate','groundwaterflowrate'],['seepagevelocity','seepagevelocity'],['advectiveheattransferpotential','advectiveheattransferpotential']
+  ];
+
+  function gvConceptFor(text){
+    const n=gvNorm(text);
+    let best='';
+    ALIASES.forEach(function(pair){ if(n.indexOf(pair[0])>=0 && pair[0].length>best.length) best=pair[1]; });
+    return best;
+  }
+  function gvMetaForValue(value){
+    const parts=String(value||'').split(':');
+    const mode=parts.length>1?parts[0]:'log';
+    const key=parts.length>1?parts[1]:parts[0];
+    let m={};
+    try{ if(typeof reportDatasetMeta==='function') m=reportDatasetMeta(value)||{}; }catch(e){}
+    try{ if((!m||!m.name) && typeof REPORT_DATASET_META!=='undefined' && REPORT_DATASET_META[key]) m=REPORT_DATASET_META[key]; }catch(e){}
+    m=m||{}; m.key=m.key||key; m.mode=m.mode||mode; return m;
+  }
+  function gvHelpForDataset(value,fallbackLabel,group){
+    const meta=gvMetaForValue(value);
+    const title=gvCleanTitle(fallbackLabel || meta.name || meta.SectionName || meta.key || 'Dataset');
+    const concept=gvConceptFor(title+' '+(meta.name||'')+' '+(meta.SectionName||''));
+    let base=PARAM_HELP[concept];
+    if(!base){
+      base={title:title,short:'An interpreted GeoVue data set derived from processed survey and formation attributes.',detail:'This parameter is an interpreted GeoVue result calculated from processed electro-seismic, geophysical, spatial and formation-model attributes. It should be read as a decision-support data set rather than a direct laboratory or borehole measurement.',equations:[['y = F(x, m, w_q)','Generic processed-estimate relationship.']],variables:[['y','reported parameter value','reported unit'],['x','processed response attributes','various'],['m','interpreted formation model','various'],['w_q','quality-control weights such as risk, confidence, noise and correlation','dimensionless']],uses:['Screening, visualisation and comparison within the GeoVue results workflow.'],limitations:[COMMON_NOTE]};
+    }
+    const unit=meta.unit || meta.LegendUnit || '';
+    const source=meta.Source==='summary'?'Summary / point data set':(meta.Source==='log'?'Formation interval / log data set':'Results data set');
+    return {title:base.title||title,displayTitle:title,unit:unit,group:group||'',source:source,short:base.short,detail:base.detail,equations:gvArray(base.equations),variables:gvArray(base.variables),uses:gvArray(base.uses),limitations:gvArray(base.limitations),key:meta.key||String(value||'').split(':').pop()};
+  }
+  function gvEquationHtml(eqs){
+    return gvArray(eqs).map(function(e){return '<div class="gv-dataset-equation"><div class="eq">'+gvEsc(e[0]||e)+'</div>'+(e[1]?'<div class="eq-note">'+gvEsc(e[1])+'</div>':'')+'</div>';}).join('');
+  }
+  function gvVarTable(vars){
+    if(!vars||!vars.length) return '';
+    return '<table class="gv-dataset-var-table"><thead><tr><th>Symbol</th><th>Definition</th><th>Typical unit</th></tr></thead><tbody>'+vars.map(function(v){return '<tr><td><strong>'+gvEsc(v[0])+'</strong></td><td>'+gvEsc(v[1])+'</td><td>'+gvEsc(v[2]||'')+'</td></tr>';}).join('')+'</tbody></table>';
+  }
+  function gvList(title,items){items=gvArray(items); if(!items.length) return ''; return '<h4>'+gvEsc(title)+'</h4><ul>'+items.map(function(x){return '<li>'+gvEsc(x)+'</li>';}).join('')+'</ul>';}
+  function gvHelpCard(item){
+    return '<article class="gv-dataset-help-card">'+
+      '<h3>'+gvEsc(item.displayTitle||item.title)+'</h3><div>'+
+      (item.group?'<span class="gv-dataset-pill">'+gvEsc(item.group)+'</span>':'')+
+      (item.unit?'<span class="gv-dataset-pill">Unit: '+gvEsc(item.unit)+'</span>':'')+
+      (item.source?'<span class="gv-dataset-pill">'+gvEsc(item.source)+'</span>':'')+
+      '</div><div class="gv-lay-summary"><strong>Short description:</strong> '+gvEsc(item.short||'')+'</div>'+
+      '<h4>Technical description</h4><p>'+gvEsc(item.detail||'')+'</p>'+
+      '<h4>Formal equations</h4>'+gvEquationHtml(item.equations)+
+      '<h4>Variable definitions</h4>'+gvVarTable(item.variables)+
+      gvList('Used for',item.uses)+gvList('Limitations and interpretation cautions',item.limitations)+
+      '<p class="gv-dataset-note">'+gvEsc(COMMON_NOTE)+'</p></article>';
+  }
+  function gvSummaryContent(){
+    const keys=['primaryAquifer','minimumYield','maximumYield','risk','confidence','groundwaterLevel','drillingDepth','latitude','longitude','elevation'];
+    return '<div class="gv-dataset-help-card"><h3>Summary Tab Data Sets</h3><p>The summary tab presents the selected point, recommendation and key drilling/yield metrics. The wording below follows the recommendation definitions used in the report and is written for both non-specialist and technical users.</p></div><div class="gv-dataset-help-list">'+
+      keys.map(function(k){const h=SUMMARY_HELP[k]; return '<details><summary>'+gvEsc(h.title)+'</summary>'+gvHelpCard({displayTitle:h.title,title:h.title,unit:h.unit,group:'Summary Tab',source:'Selected point recommendation',short:h.short,detail:h.detail,equations:h.equations,variables:h.variables,uses:h.uses,limitations:h.limitations})+'</details>';}).join('')+'</div>';
+  }
+  function gvCurrentDatasetContent(selectId){
+    const sel=document.getElementById(selectId);
+    if(!sel) return gvSummaryContent();
+    const opt=sel.options[sel.selectedIndex];
+    const group=opt&&opt.parentElement&&opt.parentElement.label;
+    const label=opt?opt.textContent:sel.value;
+    return gvHelpCard(gvHelpForDataset(sel.value,label,group));
+  }
+  function gvShortText(selectId){
+    const sel=document.getElementById(selectId); if(!sel) return '';
+    const opt=sel.options[sel.selectedIndex];
+    const group=opt&&opt.parentElement&&opt.parentElement.label;
+    const h=gvHelpForDataset(sel.value,opt?opt.textContent:sel.value,group);
+    return '<strong>'+gvEsc(h.displayTitle||h.title)+':</strong> '+gvEsc(h.short||'')+(h.unit?' <span class="gv-small">Unit: '+gvEsc(h.unit)+'</span>':'');
+  }
+  function gvEnsureModal(){
+    let overlay=document.getElementById('gvDatasetHelpOverlay'); if(overlay) return overlay;
+    overlay=document.createElement('div'); overlay.id='gvDatasetHelpOverlay'; overlay.className='gv-dataset-modal-overlay'; overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-modal','true'); overlay.setAttribute('aria-hidden','true');
+    overlay.innerHTML='<div class="gv-dataset-modal" role="document"><div class="gv-dataset-modal-head"><div><div class="gv-dataset-modal-title" id="gvDatasetHelpTitle">Data Set Description</div><div class="gv-dataset-modal-subtitle" id="gvDatasetHelpSubtitle">Professional parameter explanation, equations and interpretation notes</div></div><button type="button" class="gv-dataset-modal-close" id="gvDatasetHelpClose" aria-label="Close data set description">×</button></div><div class="gv-dataset-modal-body" id="gvDatasetHelpBody"></div></div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click',function(e){if(e.target===overlay) gvCloseHelp();});
+    document.getElementById('gvDatasetHelpClose').addEventListener('click',gvCloseHelp);
+    document.addEventListener('keydown',function(e){if(e.key==='Escape') gvCloseHelp();});
+    return overlay;
+  }
+  function gvOpenHelp(kind,selectId){
+    const overlay=gvEnsureModal(); const body=document.getElementById('gvDatasetHelpBody'); const title=document.getElementById('gvDatasetHelpTitle'); const sub=document.getElementById('gvDatasetHelpSubtitle');
+    if(kind==='summary'){title.textContent='Summary Tab Data Set Descriptions'; sub.textContent='Recommendation metrics, yield definitions and point details'; body.innerHTML=gvSummaryContent();}
+    else{const sel=document.getElementById(selectId); const opt=sel&&sel.options[sel.selectedIndex]; title.textContent='Selected Parameter Description'; sub.textContent=opt?opt.textContent:'Current selected chart data set'; body.innerHTML=gvCurrentDatasetContent(selectId);}
+    overlay.classList.add('gv-open'); overlay.setAttribute('aria-hidden','false'); setTimeout(function(){const close=document.getElementById('gvDatasetHelpClose'); if(close) close.focus();},0);
+  }
+  function gvCloseHelp(){const overlay=document.getElementById('gvDatasetHelpOverlay'); if(!overlay) return; overlay.classList.remove('gv-open'); overlay.setAttribute('aria-hidden','true');}
+  function gvUpdateShortDesc(selectId){const box=document.getElementById(selectId+'DatasetShortDesc'); if(!box) return; const html=gvShortText(selectId); if(box.innerHTML!==html) box.innerHTML=html;}
+  function gvWrapSelectWithHelp(selectId){
+    const sel=document.getElementById(selectId); if(!sel) return;
+    if(sel.dataset.gvHelpReady!=='1'){
+      sel.dataset.gvHelpReady='1';
+      const wrapper=document.createElement('div'); wrapper.className='gv-dataset-select-help-row';
+      sel.parentNode.insertBefore(wrapper,sel); wrapper.appendChild(sel);
+      const btn=document.createElement('button'); btn.type='button'; btn.className='gv-dataset-help-btn'; btn.title='Show the full description for the selected data set'; btn.setAttribute('aria-label','Show the full description for the selected data set'); btn.innerHTML='<span class="gv-help-fallback-icon" aria-hidden="true">i</span>';
+      btn.addEventListener('click',function(){gvOpenHelp('current',selectId);}); wrapper.appendChild(btn);
+      const desc=document.createElement('div'); desc.id=selectId+'DatasetShortDesc'; desc.className='gv-dataset-shortdesc'; wrapper.parentNode.insertBefore(desc,wrapper.nextSibling);
+      sel.addEventListener('change',function(){gvUpdateShortDesc(selectId);});
+    }
+    gvUpdateShortDesc(selectId);
+  }
+  function gvAddHeaderHelp(view,kind,selectId){
+    const panel=document.querySelector('.gv-results-view[data-results-view="'+view+'"]'); if(!panel) return;
+    const head=panel.querySelector('.gv-card-head'); if(!head||head.dataset.gvHelpReady==='1') return; head.dataset.gvHelpReady='1';
+    const btn=document.createElement('button'); btn.type='button'; btn.className='gv-dataset-help-btn';
+    btn.title=kind==='summary'?'Describe summary data sets':'Describe the currently loaded chart data set'; btn.setAttribute('aria-label',btn.title); btn.innerHTML='<span class="gv-help-fallback-icon" aria-hidden="true">i</span>';
+    btn.addEventListener('click',function(){gvOpenHelp(kind,selectId);}); head.appendChild(btn);
+  }
+  function gvAssignGeneratedDatasetSelectIds(){
+    const mappings=[
+      ['GeoVueContourDatasetSelect','updateContourPlot'],
+      ['GeoVueSectionDatasetSelect','updateSectionPlot'],
+      ['GeoVueProfileDatasetSelect','updateProfilePlot'],
+      ['GeoVueModelDatasetSelect','updateModelPlot']
+    ];
+    mappings.forEach(function(pair){
+      const id=pair[0], fn=pair[1];
+      if(document.getElementById(id)) return;
+      const select=document.querySelector('select[onchange*="'+fn+'"]');
+      if(select) select.id=id;
+    });
+  }
+  function gvEnhanceHelpUI(){
+    gvAssignGeneratedDatasetSelectIds();
+    gvWrapSelectWithHelp('GeoVueContourDatasetSelect');
+    gvWrapSelectWithHelp('GeoVueSectionDatasetSelect');
+    gvWrapSelectWithHelp('GeoVueProfileDatasetSelect');
+    gvWrapSelectWithHelp('GeoVueModelDatasetSelect');
+  }
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(gvEnhanceHelpUI,300); setTimeout(gvEnhanceHelpUI,1200);});
+  window.addEventListener('load',function(){setTimeout(gvEnhanceHelpUI,500); setTimeout(gvEnhanceHelpUI,1700);});
+  let gvHelpEnhanceTimer=null; const obs=new MutationObserver(function(){ if(gvHelpEnhanceTimer) return; gvHelpEnhanceTimer=setTimeout(function(){ gvHelpEnhanceTimer=null; gvEnhanceHelpUI(); },250); }); try{obs.observe(document.documentElement,{childList:true,subtree:true});}catch(e){}
+
+  function gvAllDatasetHelpContent(selectedKey){
+    const keys=Object.keys(PARAM_HELP).sort(function(a,b){
+      const ta=(PARAM_HELP[a]&&PARAM_HELP[a].title)||a;
+      const tb=(PARAM_HELP[b]&&PARAM_HELP[b].title)||b;
+      return ta.localeCompare(tb);
+    });
+    const key=(selectedKey&&PARAM_HELP[selectedKey])?selectedKey:keys[0];
+    const options=keys.map(function(k){
+      const h=PARAM_HELP[k]||{};
+      return '<option value="'+gvEsc(k)+'"'+(k===key?' selected':'')+'>'+gvEsc(h.title||k)+'</option>';
+    }).join('');
+    return '<div class="gv-dataset-help-card"><h3>Select a Data Set</h3><p>Select a report data type below to view its description, equations, interpretation notes and limitations.</p><div class="gv-dataset-select-help-row"><select id="gvAllDatasetHelpSelect" aria-label="Select data set description">'+options+'</select></div></div><div id="gvAllDatasetHelpDetail">'+gvHelpCard(gvHelpForDataset(key,(PARAM_HELP[key]&&PARAM_HELP[key].title)||key,'Data Set Help'))+'</div>';
+  }
+  function gvOpenAllDatasetHelp(){
+    const overlay=gvEnsureModal();
+    const body=document.getElementById('gvDatasetHelpBody');
+    const title=document.getElementById('gvDatasetHelpTitle');
+    const sub=document.getElementById('gvDatasetHelpSubtitle');
+    title.textContent='Data Set Help';
+    sub.textContent='Select a data type to view its description';
+    body.innerHTML=gvAllDatasetHelpContent();
+    const select=document.getElementById('gvAllDatasetHelpSelect');
+    if(select){
+      select.addEventListener('change',function(){
+        const detail=document.getElementById('gvAllDatasetHelpDetail');
+        if(detail) detail.innerHTML=gvHelpCard(gvHelpForDataset(select.value,(PARAM_HELP[select.value]&&PARAM_HELP[select.value].title)||select.value,'Data Set Help'));
+      });
+    }
+    overlay.classList.add('gv-open');
+    overlay.setAttribute('aria-hidden','false');
+    setTimeout(function(){const close=document.getElementById('gvDatasetHelpClose'); if(close) close.focus();},0);
+  }
+
+  window.GV_OPEN_DATASET_DESCRIPTION_HELP=gvOpenHelp;
+  window.GV_OPEN_ALL_DATASET_DESCRIPTION_HELP=gvOpenAllDatasetHelp;
+})();
+</script>
+
+
+<style id="gv-virtual-log-help-button-css">
+.gv-main-dataset-help-button{
+  width:auto; min-width:170px; padding:10px 18px; margin:0 0 16px 0;
+  border:0; border-radius:8px; background:#555; color:#fff; cursor:pointer;
+  font-size:16px; box-shadow:0 4px 6px rgba(0,0,0,0.1); transition:background-color .3s ease, transform .1s ease;
+}
+.gv-main-dataset-help-button:hover{background:#5a6268;}
+.gv-main-dataset-help-button:active{transform:scale(0.98);background:#4e555b;}
+</style>
+
+</head>
+	<body>
+		<div class="wait-overlay" id="waitOverlay">
+			<div class="wait-message">Document Loading. Please wait...   </div>
+			<div class="spinner"></div>
+		</div>
+		
+		<div class="header">
+			<img src="https://www.atsps2.net/StandardLogoLargeTransparent.PNG" alt="Icon">
+			<h1>GeoVue Virtual Log</h1>
+		</div>
+		<div class="image-break"></div>
+		
+		<div class="disclaimer-box">
+		  <p><strong>Terms of Use:</strong> All the data sets, interpretations, recommendations, logs, and risk assessments, presented in this document are calculated estimates of the values and parameters they represent, as they are derived from the signal attributes of multiple sets of sensor collected data. These sensors are subject to variance, drift, noise, error and uncertainty. As such, the data collected from these sensors, and the data sets derived from the sensor collected data, are subject to the same variance, drift, noise, error and uncertainty. As such, the data sets discussed in this document cannot, and should not, be viewed or interpreted as being absolute in nature. Any actions or decisions made by the user with reference to the data provided in this document, should consider the uncertainties and risks involved in its use. As such, the client accepts and agrees in full, not to hold ‘GeoVue Ltd’, its owners, directors, or employees, liable for any financial or physical losses, damages, injuries, or claims incurred or made by any persons, companies, organizations, or institutions who make use of ‘GeoVue Ltd’ field or consulting services, or the information, interpretations, findings, and recommendations discussed in this report. As Electro-seismic technologies are geophysical technologies with inherent uncertainties and risks, the client accepts and agrees in full, that ‘GeoVue Ltd’, its owners, directors, or employees, does not, and cannot, guarantee that the results published in this report to be absolutely accurate and will not accept, or be liable for, any claim of financial losses due to unsuccessful or unsatisfactory exploration results, or otherwise, due to the use of the information discussed in this report, on the part of the client and/or their associates, subsidiaries, contractors, consultants, employees, or investors.</p>
+		</div>
+
+		<div class="image-break"></div>
+		
+		<div class="note-box">
+		  <p><strong>Load Time Note:</strong> The report may take some time to load after the "Accept Terms and Load Report" button is selected. Should a "page unresponsive" message appear on your browser, either ignore the message until the document has loaded or select the "Wait" option.</p>
+		</div>
+		<div class="image-break"></div>
+		
+		<button id="acceptButton" style="background-color: #555; 
+		  border: none;
+		  color: white;
+		  padding: 10px 85px;
+		  text-align: center;
+		  text-decoration: none;
+		  display: inline-block;
+		  font-size: 16px;
+		  margin: 4px 2px;
+		  transition-duration: 0.4s;
+		  cursor: pointer;
+		  border-radius: 8px;
+		  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		  ">
+		  &#10004;  Accept Terms and Load Report
+		</button>
+		<div id="content">
+			<button type="button" id="gvMainDatasetHelpButton" class="gv-main-dataset-help-button" onclick="window.GV_OPEN_ALL_DATASET_DESCRIPTION_HELP && window.GV_OPEN_ALL_DATASET_DESCRIPTION_HELP()">Data Set Help</button>
+
+			
+			
+			
+			<p style="page-break-after: always;">&nbsp;</p>
+			<div class="block-container">
+				<div class="heading-container">
+					<h2>Point Virtual Logs</h2>
+</div>
+				<select id="rowSelector" onchange="selectRow()">
+					<option value="" disabled selected>Select Point Log</option>
+				</select><br><br>
+				
+				<div class="newtable-container">
+				<table id="selectedRowData">
+					<thead>
+						<tr>
+							<th>No</th>
+							<th>L</th>
+							<th>A</th>
+							<th>From (mbgl)</th>
+							<th>To (mbgl)</th>
+							<th>Lithology</th>
+							<th>Aquifer</th>
+							<th>Condition</th>
+							<th>Fractured Aquifer</th>
+							<th>Min Yield (l/s)</th>
+							<th>Max Yield (l/s)</th>
+							<th>Sus Yield (l/s)</th>
+							<th>Porespace Hydraulic Conductivity (m/d)</th>
+							<th>Matrix  Hydraulic Conductivity (m/d)</th>
+							<th>Porosity (%)</th>
+							<th>Specific Storage (1/m)</th>
+							<th>Storativity</th>
+							<th>Diffusivity (m2/d)</th>
+							<th>Clay(%)</th>
+							<th>Density (kg/m3)</th>
+							<th>Shear Mod (Pa)</th>
+							<th>Bulk Mod (Pa)</th>
+							<th>Compressibility (1/Pa)</th>
+							<th>Youngs Mod (Pa)</th>
+							<th>Water Quality (%)</th>
+							<th>Formation Aquifer Indicator</th>
+							<th>Formation Fracturing</th>
+							<th>SPTN</th>
+							<th>SPTRQD</th>
+							<th>Seismic Velocity (m/s)</th>
+							<th>Acoustic Impedance (Pa s/m3)</th>
+							<th>Frenzel Radius (m)</th>
+							<th>Transmission Coefficient</th>
+							<th>Critical Angle (Deg)</th>
+							<th>Seismic Attenuation Qp (GPa)</th>
+							<th>Seismic Attenuation Qs (GPa)</th>
+							<th>Apparent Electric Field Strength (V/m)</th>
+							<th>Poisson Ratio (Ratio)</th>
+							<th>Specific Volume (m3/kg)</th>
+							<th>Porespace Transmissivity (m2/d)</th>
+							<th>Porespace Permeability (md)</th>
+							<th>Matrix Transmissivity (m2/d)</th>
+							<th>Matrix Permeability (md)</th>
+							<th>Permeability Contrast (Ratio)</th>
+							<th>Aquifer Probability (%)</th>
+							<th>Formation Temperature (degC)</th>
+							<th>Aquiclude Probability (%)</th>
+							<th>Hydrocarbon Probability (%)</th>
+							<th>Saturation (%)</th>
+							<th>Terrain Gradient (m/m)</th>
+							<th>Flow Direction (deg)</th>
+							<th>Darcy Flux (m/d)</th>
+							<th>Groundwater Flow Rate (m²/d/m)</th>
+							<th>Effective Porosity (%)</th>
+							<th>Seepage Velocity (m/d)</th>
+							<th>Advective Heat Transfer Potential (W/K/m)</th>
+						</tr>
+					</thead>
+					<tbody id="selectedRow">
+					</tbody>
+				</table>
+				</div>
+				<br>
+				<button onclick="exportTableToExcel('selectedRowData', 'ExportedData')">Export to Excel</button>
+			</div>
+		</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+			var VolData =[];
+			var VolDataMax = 0;
+			var isominValue = 70;
+			var isomaxValue = 100;
+			var selectedDataHold = 'dataset1'
+			var HoldModelUnit = '';
+			var TopEndMeshdataHold = [];
+			var rawTopdataHold = [];
+			var logscatterdataHold = [];
+			var VolumeState = 1;
+			var TopographyState = 1;
+			var PointsState = 1;
+			var LogState = 1;
+			var DepthSliceState = 1;
+			var LatSliceState = 1;
+			var LonSliceState = 1;
+			var SectionLogsState = 0;			
+			var FracturePointState = 0;			
+			var ExternalDataState = 0;
+			var HoldFracscatterData = [];			
+			var HoldSectioncontourData = [];
+			var HoldSectionLogscatterData = [];
+			var HoldSectionExtLogscatterData = [];
+			var HoldSectionToplineData = [];
+			var HoldSectionBottomlineData = [];
+			var HoldSectionlayout = [];
+			var HoldcontourDataScatter = [];
+			var HoldLayout = [];
+			var DepthSliceCount = 50;
+			var LatSliceCount = 15;
+			var LonSliceCount = 15;
+			var UpdateSliceDepthArray = [];
+			var UpdateSliceLatArray = [];
+			var UpdateSliceLonArray = [];
+			var SiteMapcontourData = []; 
+			var SiteMapscatterData = [];
+			var HoldSiteMaplayout = [];
+			var SectionBoxData = [];
+			var ModelBoxData = [];
+			var HoldselectedData = '';
+			var HolddataLith = [];
+			var HolddataAqui = [];
+			var HolddataCond = [];
+			var HolddataFrac = [];
+			var HolddataMin = [];
+			var HolddataMax = [];
+			var HolddataSus = [];
+			var HolddataPrimK = [];
+			var HolddataSecK = [];
+			var HolddataPoro = [];
+			var HolddataSStor = [];
+			var HolddataStor = [];
+			var HolddataDiff = [];
+			var HolddataClay = [];
+			var HolddataDens = [];
+			var HolddataShear = [];
+			var HolddataBulk = [];
+			var HolddataComp = [];
+			var HolddataYong = [];
+			var HolddataWQ = [];
+			var HolddataAI = [];
+			var HolddataFC = [];
+			var HolddataSPTN = [];
+			var HolddataSPTRQD = [];
+			var HolddataSV = [];
+			var HolddataAcouI = [];
+			var HolddataFR = [];
+			var HolddataTC = [];
+			var HolddataCA = [];
+			var HolddataQP = [];
+			var HolddataQS = [];
+			var HolddataRes = [];
+			var HolddataET = [];
+			var HolddataMagT = [];
+			var HolddataPT = [];
+			var HolddataPP = [];
+			var HolddataMT = [];
+			var HolddataMP = [];
+			var HolddataPC = [];
+			var HolddataAP = [];
+			var HolddataTemp = [];
+			var HolddataAquilude = [];
+			var HolddataOil = [];
+			var HolddataSAT = [];
+			var ProfileBoxData = new Array(3);
+			for (var i = 0; i < ProfileBoxData.length; i++) {
+				ProfileBoxData[i] = [];
+			}
+			var HoldProfileSurfaceGroup = [];
+			var HoldProfilerawTopdata = [];
+			var HoldProfileLayout = [];
+			var ProfileselectedDataHold = 'dataset1';
+			var ContourBoxData = [];
+			var ContourHoldselectedData = '';
+			var gd = document.getElementById('plotly-Model1');
+			var animationButton = document.getElementById('animation-btn');
+			var animationInterval;
+			var isAnimating = false;
+			var Profgd = document.getElementById('plotly-Profile1');
+			var ProfanimationButton = document.getElementById('Profanimation-btn');
+			var ProfanimationInterval;
+			var ProfisAnimating = false;
+			var SiteMapShowRecPointsOnly = false;
+			var SiteMapShowRecPointsOnlychanged = false;
+			var SiteMapmarkers = [];
+			var SiteMapmarkersInst;
+			var UserSetmaxValue = 100;
+			var map1;
+			var map2;
+			var map3;
+			var map4;
+			var map5;
+			var map6;
+			var map7;
+			var map8;			
+			var HoldPresentationLayout =[];			
+			var SRTMLoaded = 0;
+			var BoxElevationArray = [];
+			let SRTMelevations = [];			
+			let GlobalTemperature = 25;			
+			let CorrectChart = 0;						
+			var SiteMaplines = [];
+			var SiteMapShowLines = false;
+			var SiteMapShowRecomendationPoints = false;
+			var RecDetected = false;
+			var GradientDirectionArray = [];
+			window.GradientDirectionArray = GradientDirectionArray;
+			window.BoxGradientDirectionData = GradientDirectionArray;
+			window.AdvectiveHeatTransferArray = [];
+			window.BestAdvectiveHeatTransferLocation = null;
+			
+			const FormationFractureCondition = [
+			  'Unfractured',
+			  'Fractured'
+			];
+			
+			const FormationCondition = [
+			  'Unaltered',
+			  'Weathered',
+			  'Fractured',
+			  'Weathered',
+			  'Fractured',
+			  'Weathered',
+			  'Fractured',
+			  'Weathered',
+			  'Fractured',
+			  'Weathered',
+			  'Fractured',
+			  'Weathered',
+			  'Fractured',
+			  'Porous',
+			  'Fractured',
+			  'Course',
+			  'Fine',
+			  'Soil'
+			];
+
+			const AquiferTypeFull = [  
+			  'Unclassified',
+			  'Weathered Ultra Mafic',
+			  'Fractured Ultra Mafic',
+			  'Weathered Metamorphic',
+			  'Fractured Metamorphic',
+			  'Weathered Mafic',
+			  'Fractured Mafic',
+			  'Weathered Igneous',
+			  'Fractured Igneous',
+			  'Weathered Conglomerate',
+			  'Fractured Conglomerate',
+			  'Weathered Volcanic',
+			  'Fractured Volcanic',
+			  'Weathered Sedimentary',
+			  'Fractured Sedimentary',
+			  'Dual Porosity Sediment',
+			  'Unconsolidated Sediment',
+			  'Saturated Soil'
+			];
+			
+			const AquiferType = [
+			  'Unclassified',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Hard',
+			  'Conglomerate',
+			  'Conglomerate',
+			  'Consolidated',
+			  'Consolidated',
+			  'Consolidated',
+			  'Consolidated',
+			  'Dual Porosity',
+			  'Unconsolidated',
+			  'Saturated'
+			];
+
+			const LithType = [
+			  'Unclassified',
+			  'Soil',
+			  'Sediment',
+			  'Volcanic',
+			  'Conglomerate',
+			  'Sedimentary',
+			  'Igneous',
+			  'Salt',
+			  'Mafic',
+			  'Metamorphic',
+			  'Ultra Mafic'
+			];
+			
+			const AquiferTypeColor = [
+			  'LightGrey',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'Teal',
+			  'SkyBlue',
+			  'SkyBlue',
+			  'SkyBlue',
+			  'SkyBlue',
+			  'SkyBlue',
+			  'SkyBlue',
+			  'Blue',
+			  'Navy',
+			  'Aqua'
+			];
+
+			const LithTypeColor = [
+			  'LightGrey',
+			  'Brown',
+			  'Yellow',
+			  'Silver',
+			  'Green',
+			  'Orange',
+			  'MediumGray',
+			  'Cream',
+			  'Gray',
+			  'DarkGrey',
+			  'Black'
+			];
+			
+			const selectionPointArray = [];
+			let ExternalDataArray = [];
+			const plotDataStorage1 = Array(20).fill(null).map(() => ({ data: null, layout: null, description: "" }));
+			const plotDataStorage2 = Array(20).fill(null).map(() => ({ data: null, layout: null, description: "" }));
+			const plotDataStorage3 = Array(20).fill(null).map(() => ({ data: null, layout: null, description: "" }));
+			const plotDataStorage4 = Array(20).fill(null).map(() => ({ data: null, layout: null, description: "" }));
+			const plotDataStorage5 = Array(50).fill(null).map(() => ({ data: null, layout: null, description: "" }));
+
+			&&&###			
+			
+			var datasets = {
+				dataset1: {
+				  name: 'Calculated Sustainable Yield Estimate(l/s)',
+				  unit: 'l/s',
+				  ID : 'atsgeosuite/cjegt9c5l1x672qqghx7cya9p',
+				  SectionName : 'Calculated Formation Type Estimate',
+				  LegendUnit: 'Lith Group',
+				  SectionIndex : 2,
+				  Index : 0
+				},
+				dataset2: {
+				  name: 'Calculated Minimum Yield Estimate (l/s)',
+				  unit: 'l/s',
+				  ID : 'atsgeosuite/cjegw9m9q5xi32sn7gk1h9cyr',
+				  SectionName : 'Calculated Aquifer Type Estimate',
+				  LegendUnit: 'Aqui Group',
+				  SectionIndex : 3,
+				  Index : 1
+				},
+				dataset3: {
+				  name: 'Calculated Maximum Yield Estimate (l/s)',
+				  unit: 'l/s',
+				  ID : 'atsgeosuite/cj574xv2o32t32so13rwxp8xd',
+				  SectionName : 'Calculated Formation Condition Estimate',
+				  LegendUnit: 'Cond',
+				  SectionIndex : 4,
+				  Index : 2
+				},
+				dataset4: {
+				  name: 'Calculated Ground water level Estimate (mbgl)',
+				  unit: 'mbgl',
+				  ID : 'atsgeosuite/cj4kr154256zy2sn5j1fhpjru',
+				  SectionName : 'Calculated Aquifer Formation Fracturing Estimate',
+				  LegendUnit: 'Frac',
+				  SectionIndex : 5,
+				  Index : 3
+				},
+				dataset5: {
+				  name: 'Calculated Drilling Depth Estimate (mbgl)',
+				  unit: 'mbgl',
+				  ID : 'atsgeosuite/cj574ejge327j2rmtgchz8002',
+				  SectionName : 'Calculated Min Yeild Estimate (l/s)',
+				  LegendUnit: 'l/s',
+				  SectionIndex : 6,
+				  Index : 4
+				},
+				dataset6: {
+				  name: 'Calculated Risk (%)',
+				  unit: '%',
+				  ID : 'atsgeosuite/cjegvjtxi1zbg2qqg0kgzsqul',
+				  SectionName : 'Calculated Max Yield Estimate (l/s)',
+				  LegendUnit: 'l/s',
+				  SectionIndex : 7,
+				  Index : 5
+				},
+				dataset7: {
+				  name: 'Calculated Interpretion Confidence (%)',
+				  unit: '%',
+				  ID : 'atsgeosuite/cjfs65s3j1fd52sn2fl9rfc74',
+				  SectionName : 'Calculated Sus Yield Estimate (l/s)',
+				  LegendUnit: 'l/s',
+				  SectionIndex : 8,
+				  Index : 6
+				},
+				dataset8: {
+				  name: 'Measured Correlation (%)',
+				  unit: '%',
+				  ID : '',
+				  SectionName : 'Calculated Porespace Hydraulic Conductivity Estimate (m/d)',
+				  LegendUnit: 'm/d',
+				  SectionIndex : 9,
+				  Index : 7
+				},
+				dataset9: {
+				  name: 'Measured Signal to Noise Ratio',
+				  unit: 'SNR',
+				  ID : '',
+				  SectionName : 'Calculated Matrix Hydraulic Conductivity Estimate (m/d)',
+				  LegendUnit: 'm/d',
+				  SectionIndex : 10,
+				  Index : 8
+				},
+				dataset10: {
+				  name: 'Measured Strikes Used',
+				  unit: 'Strikes',
+				  ID : '',
+				  SectionName : 'Calculated Porosity Estimate (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 11,
+				  Index : 9
+				},
+				dataset11: {
+				  name: 'Measured GPS Elevation (masl)',
+				  unit: 'masl',
+				  ID : '',
+				  SectionName : 'Calculated Specific Storage Estimate (1/m)',
+				  LegendUnit: '1/m',
+				  SectionIndex : 12,
+				  Index : 10
+				},
+				dataset12: {
+				  name: 'Calculated Sustainable Yield Estimate 100m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Storativity Estimate',
+				  LegendUnit: 'unitless',
+				  SectionIndex : 13,
+				  Index : 11
+				},
+				dataset13: {
+				  name: 'Calculated Sustainable Yield Estimate 200m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Porespace Diffusivity Estimate (m2/d)',
+				  LegendUnit: 'm2/d',
+				  SectionIndex : 14,
+				  Index : 12
+				},
+				dataset14: {
+				  name: 'Calculated Sustainable Yield Estimate 300m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Clay Content Estimate (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 15,
+				  Index : 13
+				},
+				dataset15: {
+				  name: 'Calculated Sustainable Yield Estimate 400m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Density Estimate (kg/m3)',
+				  LegendUnit: 'kg/m3',
+				  SectionIndex : 16,
+				  Index : 14
+				},
+				dataset16: {
+				  name: 'Calculated Sustainable Yield Estimate 500m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Shear Modulus Estimate (Pa)',
+				  LegendUnit: 'Pa',
+				  SectionIndex : 17,
+				  Index : 15
+				},
+				dataset17: {
+				  name: 'Calculated Sustainable Yield Estimate 600m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Bulk Modulus Estimate (Pa)',
+				  LegendUnit: 'Pa',
+				  SectionIndex : 18,
+				  Index : 16
+				},
+				dataset18: {
+				  name: 'Calculated Sustainable Yield Estimate 700m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Compressibility Estimate (1/Pa)',
+				  LegendUnit: '1/Pa',
+				  SectionIndex : 19,
+				  Index : 17
+				},
+				dataset19: {
+				  name: 'Calculated Sustainable Yield Estimate 800m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Youngs Modulus Estimate (Pa)',
+				  LegendUnit: 'Pa',
+				  SectionIndex : 20,
+				  Index : 18
+				},
+				dataset20: {
+				  name: 'Calculated Sustainable Yield Estimate 900m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Relative Water Quality Estimate (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 21,
+				  Index : 19
+				},
+				dataset21: {
+				  name: 'Calculated Sustainable Yield Estimate 1000m (l/s)',
+				  unit: 'l/s',
+				  ID : '',
+				  SectionName : 'Calculated Formation Aquifer Indicator',
+				  LegendUnit: 'unitless',
+				  SectionIndex : 22,
+				  Index : 20
+				},
+				dataset22: {
+				  name: 'Calculated Soil Depth (mbgl)',
+				  unit: 'mbgl',
+				  ID : '',
+				  SectionName : 'Measured Formation Fracturing (Count)',
+				  LegendUnit: 'Count',
+				  SectionIndex : 23,
+				  Index : 21
+				},
+				dataset23: {
+				  name: 'Calculated Soil Density (kg/m3)',
+				  unit: 'kg/m3',
+				  ID : '',
+				  SectionName : 'Calculated SPTN Estimate (Unitless)',
+				  LegendUnit: 'Unitless',
+				  SectionIndex : 24,
+				  Index : 22
+				},
+				dataset24: {
+				  name: 'Calculated Soil Porosity (%)',
+				  unit: '%',
+				  ID : '',
+				  SectionName : 'Calculated SPTRQD Estimate (Unitless)',
+				  LegendUnit: 'Unitless',
+				  SectionIndex : 25,
+				  Index : 23
+				},
+				dataset25: {
+				  name: 'Calculated Soil Shear Modulus (Pa)',
+				  unit: 'Pa',
+				  ID : '',
+				  SectionName : 'Calculated Seismic P-Wave Velocity Estimate (m/s)',
+				  LegendUnit: 'm/s',
+				  SectionIndex : 26,
+				  Index : 24
+				},
+				dataset26: {
+				  name: 'Calculated Soil Bulk Modulus (Pa)',
+				  unit: 'Pa',
+				  ID : '',
+				  SectionName : 'Calculated Acoustic Impeadance Estimate (Pa s/m3)',
+				  LegendUnit: 'Pa s/m3',
+				  SectionIndex : 27,
+				  Index : 25
+				},
+				dataset27: {
+				  name: 'Calculated Soil Compressibility (1/Pa)',
+				  unit: '1/Pa',
+				  ID : '',
+				  SectionName : 'Calculated Frenzel Radius Estimate (m)',
+				  LegendUnit: 'm',
+				  SectionIndex : 28,
+				  Index : 26
+				},
+				dataset28: {
+				  name: 'Calculated Soil Poisson Ratio (Ratio)',
+				  unit: 'Ratio',
+				  ID : '',
+				  SectionName : 'Calculated Transmittion Coefficient Estimate (Coeff)',
+				  LegendUnit: 'Coeff',
+				  SectionIndex : 29,
+				  Index : 27
+				},
+				dataset29: {
+				  name: 'Calculated Soil Youngs Modulus (Pa)',
+				  unit: 'Pa',
+				  ID : '',
+				  SectionName : 'Calculated Critical Angle Estimate (Deg)',
+				  LegendUnit: 'Deg',
+				  SectionIndex : 30,
+				  Index : 28
+				},
+				dataset30: {
+				  name: 'Calculated Soil Acoustic Impeadance (Pa s/m3)',
+				  unit: 'Pa s/m3',
+				  ID : '',
+				  SectionName : 'Calculated Seismic Attenuation Qp Estimate (GPa)',
+				  LegendUnit: 'GPa',
+				  SectionIndex : 31,
+				  Index : 29
+				},
+				dataset31: {
+				  name: 'Calculated Soil Storativity',
+				  unit: 'unitless',
+				  ID : '',
+				  SectionName : 'Calculated Seismic Attenuation Qs Estimate (GPa)',
+				  LegendUnit: 'GPa',
+				  SectionIndex : 32,
+				  Index : 30
+				},
+				dataset32: {
+				  name: 'Calculated Soil Diffusivity (m2/d)',
+				  unit: 'm2/d',
+				  ID : '',
+				  SectionName : 'Calculated Apparent Electric Field Strength Estimate (V/m)',
+				  LegendUnit: 'V/m',
+				  SectionIndex : 33,
+				  Index : 31
+				},
+				dataset33: {
+				  name: 'Calculated Soil Hydraulic Conductivity (m/d)',
+				  unit: 'm/d',
+				  ID : '',
+				  SectionName : 'Calculated Poisson Ratio Estimate (Ratio)',
+				  LegendUnit: 'Ratio',
+				  SectionIndex : 34,
+				  Index : 32
+				},
+				dataset34: {
+				  name: 'Calculated Soil Transmissivity (m2/d)',
+				  unit: 'm2/d',
+				  ID : '',
+				  SectionName : 'Calculated Specific Volume Estimate (m3/kg)',
+				  LegendUnit: 'm3/kg',
+				  SectionIndex : 35,
+				  Index : 33
+				},
+				dataset35: {
+				  name: 'Calculated Soil Permeability (md)',
+				  unit: 'md',
+				  ID : 'QUl6YQ==',
+				  SectionName : 'Calculated Porespace Transmissivity Estimate (m2/d)',
+				  LegendUnit: 'm2/d',
+				  SectionIndex : 36,
+				  Index : 34
+				},
+				dataset36: {
+				  name: 'Calculated Soil Clay Content (%)',
+				  unit: '%',
+				  ID : 'U3lBcw==',
+				  SectionName : 'Calculated Porespace Permeability Estimate (md)',
+				  LegendUnit: 'md',
+				  SectionIndex : 37,
+				  Index : 35
+				},
+				dataset37: {
+				  name: 'Calculated Soil SPTN (Unitless)',
+				  unit: 'Unitless',
+				  ID : 'RkJ3Zw==',
+				  SectionName : 'Calculated Matrix Transmisivity Estimate (m2/d)',
+				  LegendUnit: 'm2/d',
+				  SectionIndex : 38,
+				  Index : 36
+				},
+				dataset38: {
+				  name: 'Calculated Soil SPTRQD (Unitless)',
+				  unit: 'Unitless',
+				  ID : 'bWQzX2I=',
+				  SectionName : 'Calculated Matrix Permeability Estimate (md)',
+				  LegendUnit: 'md',
+				  SectionIndex : 39,
+				  Index : 37
+				},
+				dataset39: {
+				  name: 'Noise (v)',
+				  unit: 'V',
+				  ID : 'VzF0LVpv',
+				  SectionName : 'Calculated Permeability Contrast Estimate (Ratio)',
+				  LegendUnit: 'Ratio',
+				  SectionIndex : 40,
+				  Index : 38
+				},
+				dataset40: {
+				  name: 'Processing Depth (m)',
+				  unit: 'm',
+				  ID : 'MV9OZnM=',
+				  SectionName : 'Calculated Aquifer Probability (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 41,
+				  Index : 39
+				},
+				dataset41: {
+				  name: 'Vertical Resolution (m)',
+				  unit: 'm',
+				  ID : 'ZW9fTlE5',
+				  SectionName : 'Calculated Formation Temperature Estimate (DegC)',
+				  LegendUnit: 'DegC',
+				  SectionIndex : 42,
+				  Index : 40
+				},
+				dataset42: {
+				  name: 'Uncertainty (%)',
+				  unit: '%',
+				  ID : 'ZWl3MkE=',
+				  SectionName : 'Calculated Relative Formation Aquiclude Probability (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 43,
+				  Index : 41
+				},
+				dataset43: {
+				  name: '',
+				  unit: '',
+				  ID : '',
+				  SectionName : 'Calculated Hydrocarbon Potential (%)',
+				  LegendUnit: '%',
+				  SectionIndex : 44,
+				  Index : 42
+				},
+				dataset44: {
+				  name: '',
+				  unit: '',
+				  ID : '',
+				  SectionName : 'Calculated Seismic Reflection',
+				  LegendUnit: '',
+				  SectionIndex : 45,
+				  Index : 43
+				},
+				dataset45: {
+				  name: '',
+				  unit: '',
+				  ID : '',
+				  SectionName : 'Calculated Formation Saturation',
+				  LegendUnit: '%',
+				  SectionIndex : 45,//This index is 45 because the Seismic reflection data is calculated and not in BoxData
+				  Index : 44
+				}
+			};
+			
+			for (let i = 0; i < BoxData.data.length; i++)
+			{
+				BoxData.data[i][1] = parseFloat(BoxData.data[i][1]);
+				BoxData.data[i][2] = parseFloat(BoxData.data[i][2]);
+				BoxData.data[i][3][10] = parseFloat(BoxData.data[i][3][10]);
+			}
+			
+			for (let i = 0; i < BoxData.data.length; i++)
+			{
+				if (BoxData.data[i][4] > 0)
+				{
+					RecDetected = true;
+				}
+			}
+			if (RecDetected == false)
+			{
+				let indexedData = BoxData.data.map((item, index) => ({ originalIndex: index, data: item }));
+				indexedData.sort((a, b) => b.data[3][0] - a.data[3][0]);
+				indexedData.forEach((item, rank) => {
+					item.data[4] = rank + 1;
+				});
+				
+			
+			}
+
+function LogPoint(Index) {
+			  var selectElement = document.getElementById("rowSelector");
+			  selectElement.selectedIndex = Index;
+			}
+
+			function populateDropdown() 
+			{
+				var dropdown = document.getElementById("rowSelector");
+				dropdown.innerHTML = "<option value='' disabled selected>Select Point</option>";
+				var numRows = BoxData.data.length;
+				for (var i = 0; i < numRows; i++) {
+					var option = document.createElement("option");
+					option.value = i;
+					option.textContent = "Point " + (BoxData.data[i][0]);
+					dropdown.appendChild(option);
+				}
+			}
+
+			function DC(Str) {
+				try {
+					return atob(Str); // atob is a built-in function to decode Base64 strings
+				} catch (error) {
+					return null; // Return null if decoding fails
+				}
+			}
+			
+
+
+			const AAC = DC(datasets['dataset35'].ID) + DC(datasets['dataset36'].ID) + DC(datasets['dataset37'].ID) + DC(datasets['dataset38'].ID) + DC(datasets['dataset39'].ID) + DC(datasets['dataset40'].ID) + DC(datasets['dataset41'].ID) + DC(datasets['dataset42'].ID);
+
+			const GD_POINT_GRADIENT_INDEX = 42;
+			const GD_POINT_DIRECTION_INDEX = 43;
+			const GD_POINT_DEPTH_POTENTIAL_START_INDEX = 44;
+			const GD_POINT_BEST_HEAT_POTENTIAL_INDEX = 63;
+			const GD_POINT_BEST_FORMATION_FROM_INDEX = 64;
+			const GD_POINT_BEST_FORMATION_TO_INDEX = 65;
+			const GD_POINT_BEST_FORMATION_NUMBER_INDEX = 66;
+			const GD_POINT_BEST_DARCY_FLUX_INDEX = 67;
+			const GD_POINT_BEST_GW_FLOW_INDEX = 68;
+			const GD_POINT_BEST_EFFECTIVE_POROSITY_INDEX = 69;
+			const GD_POINT_BEST_SEEPAGE_VELOCITY_INDEX = 70;
+			const GD_FORMATION_GRADIENT_INDEX = 46;
+			const GD_FORMATION_DIRECTION_INDEX = 47;
+			const GD_FORMATION_DARCY_FLUX_INDEX = 48;
+			const GD_FORMATION_GW_FLOW_INDEX = 49;
+			const GD_FORMATION_EFFECTIVE_POROSITY_INDEX = 50;
+			const GD_FORMATION_SEEPAGE_VELOCITY_INDEX = 51;
+			const GD_FORMATION_HEAT_POTENTIAL_INDEX = 52;
+			const GD_FORMATION_HEAT_SCORE_INDEX = 53;
+			const GD_BOREHOLE_DEPTHS = [10,20,30,40,50,60,70,80,90,100,200,300,400,500,600,700,800,900,1000];
+			const GD_WATER_VOLUMETRIC_HEAT_CAPACITY = 4186000;
+			const GD_SECONDS_PER_DAY = 86400;
+
+			function GDdegToRad(deg) { return deg * Math.PI / 180; }
+			function GDradToDeg(rad) { return rad * 180 / Math.PI; }
+			function GDnumber(value, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
+			function GDclamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+			function GDroundValue(value, digits = 6) { if (!Number.isFinite(value)) return 0; const f = Math.pow(10, digits); return Math.round(value * f) / f; }
+			function GDensureArrayIndex(arr, index) { while (arr.length <= index) arr.push(0); }
+			function GDsleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+			function GDdestinationPoint(lat, lon, bearingDeg, distanceMeters) {
+				const R = 6371000, phi1 = GDdegToRad(lat), lambda1 = GDdegToRad(lon), theta = GDdegToRad(bearingDeg), delta = distanceMeters / R;
+				const phi2 = Math.asin(Math.sin(phi1) * Math.cos(delta) + Math.cos(phi1) * Math.sin(delta) * Math.cos(theta));
+				const lambda2 = lambda1 + Math.atan2(Math.sin(theta) * Math.sin(delta) * Math.cos(phi1), Math.cos(delta) - Math.sin(phi1) * Math.sin(phi2));
+				return { lat: GDradToDeg(phi2), lon: GDradToDeg(lambda2) };
+			}
+
+			function GDgenerateCrossPoints(lat, lon, radiusMeters) {
+				return { N: GDdestinationPoint(lat, lon, 0, radiusMeters), E: GDdestinationPoint(lat, lon, 90, radiusMeters), S: GDdestinationPoint(lat, lon, 180, radiusMeters), W: GDdestinationPoint(lat, lon, 270, radiusMeters) };
+			}
+
+			function GDfiniteDifferenceGradient(zN, zE, zS, zW, d) {
+				const gx = (zE - zW) / (2 * d), gy = (zN - zS) / (2 * d);
+				return { gx, gy, magnitude: Math.sqrt(gx * gx + gy * gy), direction: (GDradToDeg(Math.atan2(-gx, -gy)) + 360) % 360 };
+			}
+
+			function GDloadGoogleMapsApi() {
+				return new Promise((resolve, reject) => {
+					if (typeof google !== 'undefined' && google.maps && google.maps.ElevationService) { resolve(); return; }
+					const existing = document.querySelector('script[data-gd-google-maps="true"]');
+					if (existing) { existing.addEventListener('load', () => resolve(), { once: true }); existing.addEventListener('error', () => reject(new Error('Google Maps API failed to load.')), { once: true }); return; }
+					const script = document.createElement('script');
+					script.src = `https://maps.googleapis.com/maps/api/js?key=${AAC}`;
+					script.async = true; script.defer = true; script.dataset.gdGoogleMaps = 'true'; script.onload = () => resolve(); script.onerror = () => reject(new Error('Google Maps API failed to load.'));
+					document.head.appendChild(script);
+				});
+			}
+
+			async function GDfetchGoogleElevationsChunk(latLngLocations, attempt = 1) {
+				const elevator = new google.maps.ElevationService();
+				return new Promise((resolve, reject) => {
+					elevator.getElevationForLocations({ locations: latLngLocations }, async function(results, status) {
+						if (status === 'OK' && results && results.length === latLngLocations.length) { resolve(results.map(result => result.elevation)); return; }
+						if (status === 'OVER_QUERY_LIMIT' && attempt < 4) { await GDsleep(700 * attempt); try { resolve(await GDfetchGoogleElevationsChunk(latLngLocations, attempt + 1)); } catch (err) { reject(err); } return; }
+						reject(new Error('Google Elevation service failed: ' + status));
+					});
+				});
+			}
+
+			async function GDfetchGoogleElevations(latLngLocations) {
+				await GDloadGoogleMapsApi();
+				const elevations = [];
+				for (let i = 0; i < latLngLocations.length; i += 512) elevations.push(...await GDfetchGoogleElevationsChunk(latLngLocations.slice(i, i + 512)));
+				return elevations;
+			}
+
+			function GDbuildSampleLocationsForPoint(lat, lon) {
+				const scales = [{ radius: 500, weight: 0.10, label: 'Local' }, { radius: 2000, weight: 0.30, label: 'Intermediate' }, { radius: 8000, weight: 0.60, label: 'Regional' }];
+				const samples = [{ lat, lon, role: 'center', radius: 0 }];
+				for (const scale of scales) { const cross = GDgenerateCrossPoints(lat, lon, scale.radius); samples.push({ ...cross.N, role: 'N', radius: scale.radius, scale }, { ...cross.E, role: 'E', radius: scale.radius, scale }, { ...cross.S, role: 'S', radius: scale.radius, scale }, { ...cross.W, role: 'W', radius: scale.radius, scale }); }
+				return samples;
+			}
+
+			function GDcalculateFromElevations(lat, lon, elevations) {
+				const scales = [{ radius: 500, weight: 0.10, label: 'Local' }, { radius: 2000, weight: 0.30, label: 'Intermediate' }, { radius: 8000, weight: 0.60, label: 'Regional' }];
+				const zCenter = elevations[0];
+				if (zCenter === null || zCenter === undefined || !isFinite(zCenter)) throw new Error('Could not retrieve center elevation.');
+				let combinedGx = 0, combinedGy = 0, sinSum = 0, cosSum = 0, gradientSum = 0;
+				const perRadius = [];
+				for (let i = 0; i < scales.length; i++) {
+					const scale = scales[i], base = 1 + (i * 4), zN = elevations[base], zE = elevations[base + 1], zS = elevations[base + 2], zW = elevations[base + 3];
+					if ([zN, zE, zS, zW].some(z => z === null || z === undefined || !isFinite(z))) throw new Error(`Missing elevation data at ${scale.label} scale (${scale.radius} m).`);
+					const g = GDfiniteDifferenceGradient(zN, zE, zS, zW, scale.radius);
+					combinedGx += scale.weight * g.gx; combinedGy += scale.weight * g.gy;
+					const dirRad = GDdegToRad(g.direction); sinSum += g.magnitude * Math.sin(dirRad); cosSum += g.magnitude * Math.cos(dirRad); gradientSum += g.magnitude;
+					perRadius.push({ radius: scale.radius, label: scale.label, weight: scale.weight, gradient: g.magnitude, direction: g.direction, gx: g.gx, gy: g.gy });
+				}
+				const gradient = Math.sqrt(combinedGx * combinedGx + combinedGy * combinedGy), direction = (GDradToDeg(Math.atan2(-combinedGx, -combinedGy)) + 360) % 360;
+				const R = gradientSum > 0 ? Math.sqrt(sinSum * sinSum + cosSum * cosSum) / gradientSum : 0;
+				return { gradient, direction, centerElevation: zCenter, confidence: R > 0.85 ? 'high' : R > 0.60 ? 'moderate' : 'low', perRadius };
+			}
+
+			async function calculateGradientDirectionForBoxData() {
+				if (!BoxData || !Array.isArray(BoxData.data) || BoxData.data.length === 0) throw new Error('BoxData.data is empty or unavailable.');
+				await GDloadGoogleMapsApi();
+				const pointRequests = [], allLocations = [];
+				for (let i = 0; i < BoxData.data.length; i++) {
+					const row = BoxData.data[i], lat = parseFloat(row[1]), lon = parseFloat(row[2]);
+					if (!isFinite(lat) || !isFinite(lon)) continue;
+					const start = allLocations.length, samples = GDbuildSampleLocationsForPoint(lat, lon);
+					for (const sample of samples) allLocations.push(new google.maps.LatLng(sample.lat, sample.lon));
+					pointRequests.push({ rowIndex: i, pointNumber: row[0], lat, lon, start, count: samples.length });
+				}
+				if (pointRequests.length === 0) throw new Error('No valid WGS84 point coordinates were found in BoxData.');
+				const elevations = await GDfetchGoogleElevations(allLocations);
+				GradientDirectionArray.length = 0;
+				for (const request of pointRequests) {
+					try { const result = GDcalculateFromElevations(request.lat, request.lon, elevations.slice(request.start, request.start + request.count)); GradientDirectionArray.push({ pointNumber: request.pointNumber, rowIndex: request.rowIndex, coordinate: { latitude: request.lat, longitude: request.lon }, gradient: result.gradient, direction: result.direction, centerElevation: result.centerElevation, confidence: result.confidence, perRadius: result.perRadius }); }
+					catch (pointError) { GradientDirectionArray.push({ pointNumber: request.pointNumber, rowIndex: request.rowIndex, coordinate: { latitude: request.lat, longitude: request.lon }, gradient: null, direction: null, centerElevation: null, confidence: 'error', error: pointError.message }); }
+				}
+				window.GradientDirectionArray = GradientDirectionArray; window.BoxGradientDirectionData = GradientDirectionArray;
+				GDappendGradientResultsToBoxData(); calculateAdvectiveHeatTransferForBoxData(); return GradientDirectionArray;
+			}
+
+			function GDformationOverlapThickness(formation, depthLimit) { const from = GDnumber(formation[0]), to = GDnumber(formation[1]); return Math.max(0, Math.min(to, depthLimit) - from); }
+			function GDcalculateFormationFlowHeatValues(formation, gradient, direction, overlapThickness = null) {
+				const from = GDnumber(formation[0]), to = GDnumber(formation[1]), fullThickness = Math.max(0, to - from), thickness = overlapThickness === null ? fullThickness : Math.max(0, overlapThickness);
+				const matrixK = Math.max(0, GDnumber(formation[10])), porosityFraction = GDclamp(GDnumber(formation[11]) / 100, 0, 1), saturationFraction = GDclamp(GDnumber(formation[45]) / 100, 0, 1), effectivePorosityFraction = Math.max(porosityFraction * saturationFraction, 0);
+				const darcyFlux = matrixK * Math.max(0, GDnumber(gradient)), groundwaterFlowRate = darcyFlux * thickness * saturationFraction, seepageVelocity = effectivePorosityFraction > 0 ? darcyFlux / effectivePorosityFraction : 0, advectiveHeatPotential = (groundwaterFlowRate / GD_SECONDS_PER_DAY) * GD_WATER_VOLUMETRIC_HEAT_CAPACITY;
+				return { thickness, effectivePorosityPercent: effectivePorosityFraction * 100, darcyFlux, groundwaterFlowRate, seepageVelocity, advectiveHeatPotential, heatScore: advectiveHeatPotential, gradient: GDnumber(gradient), direction: GDnumber(direction) };
+			}
+			function GDappendGradientResultsToBoxData() {
+				if (!BoxData || !Array.isArray(BoxData.data)) return;
+				const byRowIndex = new Map(); GradientDirectionArray.forEach(item => byRowIndex.set(item.rowIndex, item));
+				for (let i = 0; i < BoxData.data.length; i++) { const row = BoxData.data[i]; if (!row[3]) row[3] = []; GDensureArrayIndex(row[3], GD_POINT_DIRECTION_INDEX); const result = byRowIndex.get(i); row[3][GD_POINT_GRADIENT_INDEX] = result && Number.isFinite(result.gradient) ? GDroundValue(result.gradient, 8) : GDnumber(row[3][GD_POINT_GRADIENT_INDEX], 0); row[3][GD_POINT_DIRECTION_INDEX] = result && Number.isFinite(result.direction) ? GDroundValue(result.direction, 3) : GDnumber(row[3][GD_POINT_DIRECTION_INDEX], 0); }
+			}
+			function calculateAdvectiveHeatTransferForBoxData() {
+				if (!BoxData || !Array.isArray(BoxData.data)) return [];
+				const summary = []; let globalBest = { pointNumber: null, rowIndex: -1, formationNumber: 0, from: 0, to: 0, advectiveHeatPotential: -Infinity, heatScore: -Infinity };
+				for (let i = 0; i < BoxData.data.length; i++) {
+					const row = BoxData.data[i]; if (!row[3]) row[3] = []; GDensureArrayIndex(row[3], GD_POINT_BEST_SEEPAGE_VELOCITY_INDEX);
+					const gradient = Math.max(0, GDnumber(row[3][GD_POINT_GRADIENT_INDEX])), direction = GDnumber(row[3][GD_POINT_DIRECTION_INDEX]), formations = Array.isArray(row[6]) ? row[6] : [];
+					let best = { heatScore: -Infinity, from: 0, to: 0, formationNumber: 0, darcyFlux: 0, groundwaterFlowRate: 0, effectivePorosityPercent: 0, seepageVelocity: 0, advectiveHeatPotential: 0 };
+					for (let j = 0; j < formations.length; j++) { const f = formations[j]; GDensureArrayIndex(f, GD_FORMATION_HEAT_SCORE_INDEX); const values = GDcalculateFormationFlowHeatValues(f, gradient, direction); f[GD_FORMATION_GRADIENT_INDEX] = GDroundValue(values.gradient, 8); f[GD_FORMATION_DIRECTION_INDEX] = GDroundValue(values.direction, 3); f[GD_FORMATION_DARCY_FLUX_INDEX] = GDroundValue(values.darcyFlux, 10); f[GD_FORMATION_GW_FLOW_INDEX] = GDroundValue(values.groundwaterFlowRate, 8); f[GD_FORMATION_EFFECTIVE_POROSITY_INDEX] = GDroundValue(values.effectivePorosityPercent, 6); f[GD_FORMATION_SEEPAGE_VELOCITY_INDEX] = GDroundValue(values.seepageVelocity, 8); f[GD_FORMATION_HEAT_POTENTIAL_INDEX] = GDroundValue(values.advectiveHeatPotential, 6); f[GD_FORMATION_HEAT_SCORE_INDEX] = GDroundValue(values.heatScore, 6); if (values.heatScore > best.heatScore) best = { heatScore: values.heatScore, from: GDnumber(f[0]), to: GDnumber(f[1]), formationNumber: j + 1, darcyFlux: values.darcyFlux, groundwaterFlowRate: values.groundwaterFlowRate, effectivePorosityPercent: values.effectivePorosityPercent, seepageVelocity: values.seepageVelocity, advectiveHeatPotential: values.advectiveHeatPotential }; }
+					for (let d = 0; d < GD_BOREHOLE_DEPTHS.length; d++) { const depthLimit = GD_BOREHOLE_DEPTHS[d]; let cumulativePotential = 0; for (let j = 0; j < formations.length; j++) { const overlap = GDformationOverlapThickness(formations[j], depthLimit); if (overlap <= 0) continue; cumulativePotential += GDcalculateFormationFlowHeatValues(formations[j], gradient, direction, overlap).advectiveHeatPotential; } row[3][GD_POINT_DEPTH_POTENTIAL_START_INDEX + d] = GDroundValue(cumulativePotential, 6); }
+					row[3][GD_POINT_BEST_HEAT_POTENTIAL_INDEX] = GDroundValue(Math.max(0, best.advectiveHeatPotential), 6); row[3][GD_POINT_BEST_FORMATION_FROM_INDEX] = GDroundValue(best.from, 3); row[3][GD_POINT_BEST_FORMATION_TO_INDEX] = GDroundValue(best.to, 3); row[3][GD_POINT_BEST_FORMATION_NUMBER_INDEX] = best.formationNumber; row[3][GD_POINT_BEST_DARCY_FLUX_INDEX] = GDroundValue(best.darcyFlux, 10); row[3][GD_POINT_BEST_GW_FLOW_INDEX] = GDroundValue(best.groundwaterFlowRate, 8); row[3][GD_POINT_BEST_EFFECTIVE_POROSITY_INDEX] = GDroundValue(best.effectivePorosityPercent, 6); row[3][GD_POINT_BEST_SEEPAGE_VELOCITY_INDEX] = GDroundValue(best.seepageVelocity, 8);
+					if (best.heatScore > globalBest.heatScore) globalBest = { pointNumber: row[0], rowIndex: i, formationNumber: best.formationNumber, from: GDroundValue(best.from, 3), to: GDroundValue(best.to, 3), advectiveHeatPotential: GDroundValue(best.advectiveHeatPotential, 6), heatScore: GDroundValue(best.heatScore, 6), gradient: GDroundValue(gradient, 8), direction: GDroundValue(direction, 3) };
+					summary.push({ pointNumber: row[0], gradient, direction, bestFormation: best, depthPotentials: GD_BOREHOLE_DEPTHS.map((depth, idx) => ({ depth, value: row[3][GD_POINT_DEPTH_POTENTIAL_START_INDEX + idx] })) });
+				}
+				window.AdvectiveHeatTransferArray = summary; window.BestAdvectiveHeatTransferLocation = globalBest; return summary;
+			}
+			async function runGradientFlowThermalCalculationsOnLoad() { try { await calculateGradientDirectionForBoxData(); } catch (err) { console.warn('Gradient calculation did not complete; using any existing gradient values for heat-transfer calculations.', err); GDappendGradientResultsToBoxData(); calculateAdvectiveHeatTransferForBoxData(); } }
+			window.calculateGradientDirectionForBoxData = calculateGradientDirectionForBoxData;
+			window.calculateAdvectiveHeatTransferForBoxData = calculateAdvectiveHeatTransferForBoxData;
+			window.runGradientFlowThermalCalculationsOnLoad = runGradientFlowThermalCalculationsOnLoad;
+
+			function selectRow() 
+			{
+				var dropdown = document.getElementById("rowSelector");
+				var selectedIndex = dropdown.value;
+				if (selectedIndex === "") 
+				{
+					return;
+				}
+				var selectedRowData = BoxData.data[selectedIndex];
+				var tableBody = document.getElementById("selectedRow");
+				tableBody.innerHTML = "";
+				for (var i = 0; i < selectedRowData[6].length; i++) 
+				{
+					var newRow = document.createElement("tr");
+					var rowHeight = Math.floor(Math.abs(selectedRowData[6][i][1] - selectedRowData[6][i][0])*5);
+					newRow.style.height = rowHeight + "px";
+					var cell = document.createElement("td");
+					cell.textContent = i + 1;
+					newRow.appendChild(cell);
+					var cell2 = document.createElement("td");
+					cell2.textContent = '';
+					cell2.style.backgroundColor = LithTypeColor[selectedRowData[6][i][2]];
+					newRow.appendChild(cell2);
+					var cell3 = document.createElement("td");
+					cell3.textContent = '';
+					cell3.style.backgroundColor = AquiferTypeColor[selectedRowData[6][i][3]];
+					newRow.appendChild(cell3);
+					for (var x = 0; x < selectedRowData[6][i].length; x++) 
+					{
+						if (x === 53) { continue; }
+						var cell = document.createElement("td");
+						if (x == 2)
+						{
+							if (selectedRowData[6][i][x] < 11)
+							{
+								cell.textContent = LithType[selectedRowData[6][i][x]];
+							}
+							else
+							{
+								cell.textContent = '';
+							}
+						}
+						else if (x==3)
+						{
+							if (selectedRowData[6][i][x] < 18)
+							{
+								cell.textContent = AquiferType[selectedRowData[6][i][x]];
+							}
+							else
+							{
+								cell.textContent = '';
+							}
+						}
+						else if (x==4)
+						{
+							if (selectedRowData[6][i][x] < 18)
+							{
+								cell.textContent = FormationCondition[selectedRowData[6][i][x]];
+							}
+							else
+							{
+								cell.textContent = '';
+							}
+						}
+						else if (x==5)
+						{
+							if (selectedRowData[6][i][x] == 1)
+							{
+								cell.textContent = 'Fractured';
+							}
+							else
+							{
+								cell.textContent = '';
+							}
+						}
+						else
+						{
+							if (x == 0)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 1)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 6)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 7)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 8)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 9)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 10)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 11)
+							{
+								cell.textContent = selectedRowData[6][i][x];//*100;
+							}
+							else if (x == 12)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 13)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 14)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 15)
+							{
+								cell.textContent = selectedRowData[6][i][x];
+							}
+							else if (x == 16)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 17)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 18)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 19)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 20)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 21)
+							{
+								cell.textContent = selectedRowData[6][i][x];//*100;
+							}
+							else if (x == 22)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 23)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 24)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 25)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 26)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 27)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 28)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 29)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 30)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 31)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 32)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 33)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 34)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 35)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 36)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 37)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 38)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 39)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 40)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 41)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 42)
+							{
+								cell.textContent = (selectedRowData[6][i][x] * GlobalTemperature + 10).toExponential(2);
+							}
+							else if (x == 43)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 44)
+							{
+								cell.textContent = selectedRowData[6][i][x].toExponential(2);
+							}
+							else if (x == 45)
+								{
+									cell.textContent = selectedRowData[6][i][x].toExponential(2);
+								}
+								else if (x >= 46 && x <= 52)
+								{
+									var advectiveValue = Number(selectedRowData[6][i][x]);
+									if (Number.isFinite(advectiveValue))
+									{
+										cell.textContent = (advectiveValue !== 0 && (Math.abs(advectiveValue) < 0.001 || Math.abs(advectiveValue) >= 10000)) ? advectiveValue.toExponential(2) : String(Math.round(advectiveValue * 1000000) / 1000000);
+									}
+									else
+									{
+										cell.textContent = '';
+									}
+								}
+						}
+						newRow.appendChild(cell);
+					}
+					tableBody.appendChild(newRow);
+				}
+			}
+			populateDropdown();
+			
+			function exportTableToExcel(tableID, filename = ''){
+				var table = document.getElementById(tableID);
+				var worksheet = XLSX.utils.table_to_sheet(table);
+				var workbook = XLSX.utils.book_new();
+				XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+				XLSX.writeFile(workbook, filename ? filename + '.xlsx' : 'exported_data.xlsx');
+			}
+			
+			async function showContentAndRunScript() 
+			{
+				document.getElementById("acceptButton").style.display = "none";
+				var divnote = document.querySelector('.note-box');
+				divnote.style.display = 'none';
+				document.getElementById("content").style.display = "block";
+				await runGradientFlowThermalCalculationsOnLoad();
+				LogPoint(1);
+				selectRow();
+				var warningBox = document.getElementById("warning-box");
+				if (warningBox) { warningBox.style.display = "none"; }
+			}
+	
+			document.getElementById("acceptButton").addEventListener('click', async function() {
+				setTimeout(function() {
+					document.getElementById('waitOverlay').style.display = 'flex';
+				}, 500);
+
+				setTimeout(function() {
+					showContentAndRunScript();
+				}, 2000);
+				
+				setTimeout(function() {
+					document.getElementById('waitOverlay').style.display = 'none';
+				}, 3000);
+			});
+		</script>
+	
+<script id="gv-apparent-resistivity-log-patch">
+(function(){
+  "use strict";
+
+  // GeoVue virtual-log apparent-resistivity patch.
+  // This template only contains the virtual-log report view, so no map/section/profile/model UI is added.
+  var GV_RES_FORMATION_INDEX = 54;
+
+  function gvNum(value, fallback) {
+    var n = Number(value);
+    return Number.isFinite(n) ? n : (fallback === undefined ? 0 : fallback);
+  }
+
+  function gvClamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function gvRound(value, digits) {
+    if (!Number.isFinite(value)) return 0;
+    var f = Math.pow(10, digits === undefined ? 1 : digits);
+    return Math.round(value * f) / f;
+  }
+
+  function gvEnsureIndex(arr, index, fillValue) {
+    if (!Array.isArray(arr)) return;
+    while (arr.length <= index) arr.push(fillValue === undefined ? 0 : fillValue);
+  }
+
+  function gvCalculateApparentFormationResistivity(formation) {
+    // Bounded, hydrogeologically realistic apparent/proxy estimate.
+    // Inputs are taken from the existing formation BoxData fields:
+    // porosity, clay, water quality, apparent electric field strength, temperature and saturation.
+    if (!Array.isArray(formation)) return 0;
+
+    var electricField = Math.abs(gvNum(formation[33], 0));          // V/m
+    var porosity = gvClamp(gvNum(formation[11], 25), 3, 60);        // %
+    var clay = gvClamp(gvNum(formation[15], 25), 0, 100);           // %
+    var waterQuality = gvClamp(gvNum(formation[21], 50), 0, 100);   // relative %
+    var saturation = gvClamp(gvNum(formation[45], 100), 0, 100);    // %
+    var tempScale = (typeof GlobalTemperature !== "undefined") ? gvNum(GlobalTemperature, 25) : 25;
+    var formationTemp = gvNum(formation[42], 0) * tempScale + 10;   // degC
+
+    // Prevent tiny field strengths from generating unrealistically large resistivities.
+    electricField = Math.max(electricField, 0.002);
+
+    var baseOhmM = 55;
+    var fieldFactor = gvClamp(Math.pow(0.05 / electricField, 0.28), 0.35, 3.20);
+    var porosityFactor = gvClamp(Math.pow(25 / porosity, 0.35), 0.55, 2.00);
+    var clayFactor = gvClamp(1 / (1 + clay / 60), 0.45, 1.15);
+    var saturationFactor = gvClamp(1 / (0.65 + 0.006 * saturation), 0.55, 1.35);
+    var waterQualityFactor = gvClamp(0.75 + waterQuality / 200, 0.75, 1.25);
+    var temperatureFactor = gvClamp(1 / (1 + 0.018 * (formationTemp - 20)), 0.65, 1.25);
+
+    var rho = baseOhmM * fieldFactor * porosityFactor * clayFactor * saturationFactor * waterQualityFactor * temperatureFactor;
+
+    // Normal hydrogeological bounds; use a separate dry-rock mode if higher values are required.
+    return gvRound(gvClamp(rho, 5, 1500), 1);
+  }
+
+  function gvAugmentResistivityData() {
+    if (!window.BoxData || !Array.isArray(BoxData.data)) return;
+
+    for (var i = 0; i < BoxData.data.length; i++) {
+      var row = BoxData.data[i];
+      if (!Array.isArray(row) || !Array.isArray(row[6])) continue;
+
+      for (var j = 0; j < row[6].length; j++) {
+        var formation = row[6][j];
+        if (!Array.isArray(formation)) continue;
+        gvEnsureIndex(formation, GV_RES_FORMATION_INDEX, 0);
+        formation[GV_RES_FORMATION_INDEX] = gvCalculateApparentFormationResistivity(formation);
+      }
+    }
+  }
+
+  function gvFormatResValue(value) {
+    var n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    return String(gvRound(n, 1));
+  }
+
+  function gvPatchLogHeaders() {
+    var headerRow = document.querySelector("#selectedRowData thead tr");
+    if (!headerRow) return;
+
+    var labels = [
+      "No (#)",
+      "Lithology Colour (class)",
+      "Aquifer Colour (class)",
+      "From (mbgl)",
+      "To (mbgl)",
+      "Lithology (class)",
+      "Aquifer (class)",
+      "Condition (class)",
+      "Fractured Aquifer (presence)",
+      "Min Yield (l/s)",
+      "Max Yield (l/s)",
+      "Sus Yield (l/s)",
+      "Porespace Hydraulic Conductivity (m/d)",
+      "Matrix Hydraulic Conductivity (m/d)",
+      "Porosity (%)",
+      "Specific Storage (1/m)",
+      "Storativity (unitless)",
+      "Diffusivity (m2/d)",
+      "Clay (%)",
+      "Density (kg/m3)",
+      "Shear Mod (Pa)",
+      "Bulk Mod (Pa)",
+      "Compressibility (1/Pa)",
+      "Youngs Mod (Pa)",
+      "Water Quality (%)",
+      "Formation Aquifer Indicator (unitless)",
+      "Formation Fracturing (count)",
+      "SPTN (unitless)",
+      "SPTRQD (unitless)",
+      "Seismic Velocity (m/s)",
+      "Acoustic Impedance (Pa s/m3)",
+      "Frenzel Radius (m)",
+      "Transmission Coefficient (coefficient)",
+      "Critical Angle (deg)",
+      "Seismic Attenuation Qp (GPa)",
+      "Seismic Attenuation Qs (GPa)",
+      "Apparent Electric Field Strength (V/m)",
+      "Poisson Ratio (ratio)",
+      "Specific Volume (m3/kg)",
+      "Porespace Transmissivity (m2/d)",
+      "Porespace Permeability (md)",
+      "Matrix Transmissivity (m2/d)",
+      "Matrix Permeability (md)",
+      "Permeability Contrast (ratio)",
+      "Aquifer Probability (%)",
+      "Formation Temperature (degC)",
+      "Aquiclude Probability (%)",
+      "Hydrocarbon Probability (%)",
+      "Saturation (%)",
+      "Terrain Gradient (m/m)",
+      "Flow Direction (deg)",
+      "Darcy Flux (m/d)",
+      "Groundwater Flow Rate (m2/d/m)",
+      "Effective Porosity (%)",
+      "Seepage Velocity (m/d)",
+      "Advective Heat Transfer Potential (W/K/m)",
+      "Apparent Formation Resistivity (Ohm.m)"
+    ];
+
+    headerRow.innerHTML = "";
+    labels.forEach(function(label) {
+      var th = document.createElement("th");
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
+  }
+
+  function gvPatchSelectRow() {
+    if (typeof window.selectRow !== "function" || window.selectRow.__gvResPatch) return;
+    var original = window.selectRow;
+    window.selectRow = function() {
+      gvAugmentResistivityData();
+      var result = original.apply(this, arguments);
+      try {
+        var dropdown = document.getElementById("rowSelector");
+        var selectedIndex = dropdown ? dropdown.value : "";
+        var selectedRowData = (selectedIndex !== "" && window.BoxData) ? BoxData.data[selectedIndex] : null;
+        var bodyRows = document.querySelectorAll("#selectedRow tr");
+        if (selectedRowData && Array.isArray(selectedRowData[6])) {
+          for (var i = 0; i < bodyRows.length && i < selectedRowData[6].length; i++) {
+            var cells = bodyRows[i].querySelectorAll("td");
+            var value = selectedRowData[6][i][GV_RES_FORMATION_INDEX];
+            if (cells.length) cells[cells.length - 1].textContent = gvFormatResValue(value);
+          }
+        }
+      } catch (err) {
+        console.warn("Resistivity log update failed:", err);
+      }
+      return result;
+    };
+    window.selectRow.__gvResPatch = true;
+  }
+
+  function gvInstallResistivityLogPatch() {
+    gvAugmentResistivityData();
+    gvPatchLogHeaders();
+    gvPatchSelectRow();
+  }
+
+  window.GeoVueCalculateApparentFormationResistivity = gvCalculateApparentFormationResistivity;
+  window.GeoVueAugmentApparentResistivityData = gvAugmentResistivityData;
+
+  gvInstallResistivityLogPatch();
+  window.addEventListener("load", gvInstallResistivityLogPatch);
+  document.addEventListener("DOMContentLoaded", gvInstallResistivityLogPatch);
+})();
+</script>
+</body>
+</html>
